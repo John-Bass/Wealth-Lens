@@ -91,8 +91,8 @@ input[type=range]{transition:opacity .15s}input[type=range]:active{opacity:.8}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 /* Base page styling — fixed gradient background that stays in viewport */
 html{height:100%}
-body{min-height:100%;background:var(--page-bg,var(--bg));color:var(--text);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-body::before{content:'';position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse at 20% 20%,color-mix(in srgb,var(--page-bg,var(--bg)) 88%,white),var(--page-bg,var(--bg)) 70%);pointer-events:none;-webkit-pointer-events:none}
+body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+body::before{content:'';position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse at 20% 20%,color-mix(in srgb,var(--bg) 88%,white),var(--bg) 70%);pointer-events:none;-webkit-pointer-events:none}
 /* iOS Safari touch fixes */
 button,a,.link-btn,.nav-tab,.toggle-btn,.btn-primary,.btn-add,.btn-edit,.btn-delete,.btn-cancel,.btn-save,.nav-logout,.profile-chip,.foo-step,.acct-row{-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer}
 input,select,textarea{touch-action:manipulation}
@@ -105,7 +105,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 input[type=color]{-webkit-appearance:none;appearance:none}
 input[type=color]::-webkit-color-swatch-wrapper{padding:0}
 input[type=color]::-webkit-color-swatch{border:none;border-radius:4px}
-::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--page-bg,var(--bg))}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 /* Utility class to hide elements — used to show/hide tabs, modals, forms */
 .hidden{display:none!important}
 /* ===== LOGIN SCREEN STYLES ===== */
@@ -350,7 +350,7 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 
 </style>
 <noscript><style>#login-screen,#app-shell{display:none!important}#no-js-banner{display:block!important}</style></noscript>
 </head>
-<body class="theme-bento">
+<body>
 <div id="no-js-banner" style="background:#dc2626;color:#fff;padding:16px 20px;text-align:center;font-family:-apple-system,sans-serif;font-size:14px;font-weight:600;line-height:1.5;position:fixed;top:0;left:0;right:0;z-index:9999">
   This app requires a full browser to run.<br>
   <span style="font-weight:400;font-size:13px">
@@ -480,7 +480,7 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 
 
 <!-- Author: John Bass (AI Assisted) -->
 <!-- Sync Modal — export/import data across devices -->
-<div id="sync-modal" class="modal-overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+<div id="sync-modal" class="modal-overlay hidden" onclick="closeSyncModal(event)">
   <div class="modal-card" style="max-width:500px">
     <h2>Sync Data Across Devices</h2>
     <p style="color:var(--text-dim);font-size:13px;margin-bottom:20px">Export your data to transfer to another device, or import data from another device.</p>
@@ -1000,28 +1000,25 @@ function renderAccountCards(){
 }
 
 // Edit a history entry field (date, bal, or comment)
+// Sort history by date and update balance to latest entry
+function sortHistAndUpdateBal(acctIdx){
+  const h=accounts[acctIdx].history;
+  h.sort((a,b)=>a.date.localeCompare(b.date));
+  if(h.length>0)accounts[acctIdx].balance=h[h.length-1].bal;
+}
 function editHistEntry(acctIdx,histIdx,field,value){
   if(!accounts[acctIdx]||!accounts[acctIdx].history[histIdx])return;
   accounts[acctIdx].history[histIdx][field]=value;
-  if(field==='bal'){
-    accounts[acctIdx].history.sort((a,b)=>a.date.localeCompare(b.date));
-    // Update current balance if this is the latest entry
-    const h=accounts[acctIdx].history;
-    accounts[acctIdx].balance=h[h.length-1].bal;
-  }
-  if(field==='date')accounts[acctIdx].history.sort((a,b)=>a.date.localeCompare(b.date));
+  if(field==='bal'||field==='date')sortHistAndUpdateBal(acctIdx);
   saveAccounts(accounts);markModified();renderAll();
 }
 function deleteHistEntry(acctIdx,histIdx){
   if(!accounts[acctIdx]||!accounts[acctIdx].history[histIdx])return;
   if(!confirm('Remove this history entry?'))return;
   accounts[acctIdx].history.splice(histIdx,1);
-  // Update balance to latest remaining entry
-  const h=accounts[acctIdx].history;
-  if(h.length>0){h.sort((a,b)=>a.date.localeCompare(b.date));accounts[acctIdx].balance=h[h.length-1].bal;}
+  sortHistAndUpdateBal(acctIdx);
   saveAccounts(accounts);markModified();renderAccountCards();renderAll();
 }
-
 function addHistoryEntry(id){
   const idx=accounts.findIndex(a=>a.id===id);if(idx===-1)return;
   const dateEl=document.getElementById("hist-date-"+id);
@@ -1031,8 +1028,7 @@ function addHistoryEntry(id){
   if(!date||isNaN(val))return;
   const comment=commentEl?commentEl.value:"";
   accounts[idx].history.push({date,bal:val,comment});
-  accounts[idx].history.sort((a,b)=>a.date.localeCompare(b.date));
-  accounts[idx].balance=val;
+  sortHistAndUpdateBal(idx);
   saveAccounts(accounts);markModified();renderAccountCards();renderAll();
 }
 
@@ -1042,7 +1038,7 @@ function dropAccount(targetIdx){
   const moved=accounts.splice(dragSrcIdx,1)[0];
   accounts.splice(targetIdx,0,moved);
   dragSrcIdx=null;
-  saveAccounts(accounts);
+  saveAccounts(accounts);markModified();
   renderAccountCards();
   renderAll();
 }
@@ -1074,8 +1070,8 @@ function renderDebtProfiles(){
 // Load a saved profile into the calculator
 function loadRetProfile(i){activeRetProfile=i;const p=retProfiles[i];retState={...retState,...p};renderRetirement();renderRetProfiles();}
 function loadDebtProfile(i){activeDebtProfile=i;const p=debtProfiles[i];debtState={...debtState,...p};renderDebt();renderDebtProfiles();}
-function deleteRetProfile(i){retProfiles.splice(i,1);if(activeRetProfile===i)activeRetProfile=null;else if(activeRetProfile>i)activeRetProfile--;saveData("retProfiles",retProfiles);renderRetProfiles();}
-function deleteDebtProfile(i){debtProfiles.splice(i,1);if(activeDebtProfile===i)activeDebtProfile=null;else if(activeDebtProfile>i)activeDebtProfile--;saveData("debtProfiles",debtProfiles);renderDebtProfiles();}
+function deleteRetProfile(i){retProfiles.splice(i,1);if(activeRetProfile===i)activeRetProfile=null;else if(activeRetProfile>i)activeRetProfile--;saveData("retProfiles",retProfiles);markModified();renderRetProfiles();}
+function deleteDebtProfile(i){debtProfiles.splice(i,1);if(activeDebtProfile===i)activeDebtProfile=null;else if(activeDebtProfile>i)activeDebtProfile--;saveData("debtProfiles",debtProfiles);markModified();renderDebtProfiles();}
 
 // Save modal
 // Opens the modal to save the current calculator inputs as a named profile
@@ -1351,7 +1347,7 @@ function renderFOO(){
   html+=`<div style="height:6px;background:var(--bg-inner);border-radius:3px;margin-bottom:20px;overflow:hidden"><div style="height:100%;width:${(completedCount/FOO_STEPS.length*100)}%;background:var(--accent);border-radius:3px;transition:width .3s"></div></div>`;
   FOO_STEPS.forEach((s,i)=>{
     const done=fooProgress[i];
-    html+=`<div class="foo-step ${done?'completed':''}" onclick="fooProgress[${i}]=!fooProgress[${i}];saveData('foo',fooProgress);renderFOO();">
+    html+=`<div class="foo-step ${done?'completed':''}" onclick="fooProgress[${i}]=!fooProgress[${i}];saveData('foo',fooProgress);markModified();renderFOO();">
       <div class="foo-check">${done?'✓':''}</div>
       <div class="foo-info"><div class="foo-title">${s.title}</div><div class="foo-desc">${s.desc}</div></div>
     </div>`;
@@ -1363,7 +1359,7 @@ function renderFOO(){
 // ACTIONS
 // ================================================================
 // ===== THEME SYSTEM =====
-// 6 themes total: Default dark + 5 alternatives (Minimalist, Futuristic, Bento, Luxury, Bold)
+// 6 themes: Kyoto Dawn (default) / Kyoto Dusk, Tokyo Dawn / Dusk, Osaka Dawn / Dusk
 // Themes work by adding a CSS class to <body> which overrides :root CSS variables
 // ===== COLOR SYSTEM =====
 // ===== BACKGROUND COLOR SYSTEM =====
@@ -1448,6 +1444,7 @@ function inlineEditDashBal(id,el,color){
 // Export: generates JSON file with all user data (accounts, budget, profiles, settings)
 // Import: reads JSON file and merges/replaces data
 function openSyncModal(){document.getElementById('sync-modal').classList.remove('hidden');document.getElementById('sync-status').textContent='';}
+function closeSyncModal(e){if(e.target===document.getElementById('sync-modal'))document.getElementById('sync-modal').classList.add('hidden');}
 
 function exportSyncData(){
   if(!currentUser)return;
