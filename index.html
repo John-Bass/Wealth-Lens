@@ -281,7 +281,7 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
 .proj-row .proj-num{text-align:right;font-weight:700}
 .proj-row .proj-change{text-align:right;font-size:11px;font-weight:600}
 .proj-total{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px;padding:12px 14px;border-radius:10px;margin-top:8px;font-size:14px;font-weight:800;background:var(--bg-inner);border:1px solid var(--border)}
-@media(max-width:700px){.proj-row,.proj-total{grid-template-columns:1.5fr 1fr 1fr;}.proj-row>:nth-child(4),.proj-row>:nth-child(5),.proj-total>:nth-child(4),.proj-total>:nth-child(5){display:none}}
+@media(max-width:700px){#proj-table{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}.proj-row,.proj-total{grid-template-columns:1.5fr 1fr 1fr;min-width:320px}.proj-row>:nth-child(4),.proj-row>:nth-child(5),.proj-total>:nth-child(4),.proj-total>:nth-child(5){display:none}}
 /* FOO checklist */
 /* ===== FINANCIAL ORDER OF OPERATIONS — 9-step checklist styling ===== */
 .foo-step{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-radius:10px;margin-bottom:6px;background:var(--bg-inner);cursor:pointer;transition:background .15s}
@@ -305,6 +305,39 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
 /* Edit flash — brief green border pulse when a field value changes */
 @keyframes editFlash{0%{box-shadow:0 0 0 2px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
 .edit-flash{animation:editFlash .5s ease-out}
+/* ===== SUBTLE ANIMATIONS — entrance, transitions, hover polish ===== */
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes contentFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes nwPop{0%{transform:scale(.9);opacity:.5}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+/* Login card entrance */
+.login-card{animation:fadeSlideUp .5s ease-out}
+/* Modal entrance — fade overlay + scale card */
+.modal-overlay:not(.hidden){animation:fadeIn .2s ease-out}
+.modal-overlay:not(.hidden) .modal-card{animation:modalIn .25s ease-out}
+/* Tab content fade on switch */
+#tab-dashboard:not(.hidden),#tab-accounts:not(.hidden),#tab-tools:not(.hidden){animation:contentFade .3s ease-out}
+/* Summary card staggered entrance */
+.summary-card{animation:fadeSlideUp .4s ease-out both}
+.summary-card:nth-child(1){animation-delay:.05s}.summary-card:nth-child(2){animation-delay:.1s}.summary-card:nth-child(3){animation-delay:.15s}.summary-card:nth-child(4){animation-delay:.2s}
+/* NW value pop on load */
+.nav-networth .value{animation:nwPop .5s ease-out .3s both}
+/* Budget item hover tint */
+.budget-item{transition:background .15s;border-radius:10px;padding:4px 8px;margin:-4px -8px}
+.budget-item:hover{background:var(--accent-dim)}
+/* Projection row hover highlight */
+.proj-row{transition:background .15s}.proj-row:hover:not(.proj-header){background:color-mix(in srgb,var(--bg-inner) 85%,var(--accent) 15%)}
+/* Chart and tool panel hover */
+.chart-panel,.tool-panel{transition:box-shadow .2s ease}
+.chart-panel:hover,.tool-panel:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+/* Account card hover lift */
+.acct-card:hover:not(.dragging){transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.1)}
+/* Range slider enhanced thumb */
+input[type=range]::-webkit-slider-thumb{transition:transform .15s,box-shadow .15s}
+input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 0 8px var(--accent-dim)}
+/* QR overlay entrance */
+#qr-overlay{animation:fadeIn .2s ease-out}
 /* Drag-and-drop account reordering */
 .acct-card{transition:transform .2s ease,box-shadow .2s ease,opacity .2s ease}
 .acct-card.dragging{opacity:.4;transform:scale(1.03);box-shadow:0 12px 32px rgba(0,0,0,.4)}
