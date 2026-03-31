@@ -31,6 +31,7 @@ if('caches' in window){caches.keys().then(function(n){n.forEach(function(n){cach
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 <style>
 /* ===== WealthLens — Author: John Bass (AI Assisted) ===== */
 /* ===== CSS VARIABLES =====
@@ -446,15 +447,7 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
       <button class="btn-save" onclick="exportSyncData()" style="flex:1;min-width:120px">Download JSON</button>
       <button class="btn-save" onclick="emailSyncData()" style="flex:1;min-width:120px;background:var(--blue)">Email JSON</button>
-      <button class="btn-save" onclick="generateSyncLink()" style="flex:1;min-width:120px;background:#7c3aed">Share Link</button>
-    </div>
-    <div id="sync-link-box" style="display:none;margin-bottom:16px;background:var(--bg-inner);border:1px solid var(--border);border-radius:10px;padding:12px">
-      <div style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Sync Link (open on other device)</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input id="sync-link-input" readonly style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);font-size:11px;font-family:var(--font);color:var(--text);outline:none" onclick="this.select()">
-        <button onclick="copySyncLink()" style="padding:8px 14px;border-radius:8px;border:none;background:var(--accent);color:var(--bg);font-size:12px;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">Copy</button>
-      </div>
-      <div id="sync-link-status" style="font-size:11px;color:var(--text-dim);margin-top:4px"></div>
+      <button class="btn-save" onclick="generateSyncQR()" style="flex:1;min-width:120px;background:#7c3aed">Sync via QR</button>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:16px">
       <label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;display:block;margin-bottom:8px">Import Data File</label>
@@ -462,6 +455,17 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
       <div id="sync-status" style="font-size:12px;margin-top:10px;min-height:20px"></div>
     </div>
     <div class="modal-actions"><button class="btn-cancel" onclick="document.getElementById('sync-modal').classList.add('hidden')">Close</button></div>
+  </div>
+</div>
+
+<!-- QR Sync Overlay — fullscreen for easy phone scanning -->
+<div id="qr-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:2000;align-items:center;justify-content:center;flex-direction:column;padding:20px" onclick="if(event.target===this)closeQR()">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:340px;width:100%;text-align:center">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:6px">Scan to Sync</h2>
+    <div id="qr-diff-summary" style="font-size:13px;color:var(--text-dim);margin-bottom:16px;min-height:20px"></div>
+    <canvas id="qr-canvas" style="border-radius:10px;max-width:260px;width:100%;display:block;margin:0 auto"></canvas>
+    <div style="font-size:12px;color:var(--text-faint);margin-top:12px">Open WealthLens on your other device and scan</div>
+    <button onclick="closeQR()" style="margin-top:16px;padding:10px 28px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:14px;font-family:var(--font);cursor:pointer;font-weight:600">Close</button>
   </div>
 </div>
 
@@ -1462,79 +1466,140 @@ function importSyncData(file){
   reader.readAsText(file);
 }
 
-// ===== URL HASH SYNC — share data via compressed link =====
-async function generateSyncLink(){
+// ===== DIFF SYNC — field-level change tracking via snapshot comparison =====
+function setSyncBase(){
   if(!currentUser)return;
-  const status=document.getElementById('sync-link-status');
-  const box=document.getElementById('sync-link-box');
-  const input=document.getElementById('sync-link-input');
-  status.textContent='Generating link...';box.style.display='block';
-  try{
-    const data={version:1,user:currentUser,timestamp:new Date().toISOString(),accounts,budget:budgetState,retProfiles,debtProfiles,fooProgress:loadData('foo'),customBg:loadData('customBg')};
-    const json=JSON.stringify(data);
-    let encoded;
-    if(typeof CompressionStream!=='undefined'){
-      const cs=new CompressionStream('gzip');
-      const writer=cs.writable.getWriter();
-      writer.write(new TextEncoder().encode(json));writer.close();
-      const chunks=[];const reader=cs.readable.getReader();
-      while(true){const{done,value}=await reader.read();if(done)break;chunks.push(value);}
-      const compressed=new Uint8Array(chunks.reduce((a,c)=>a+c.length,0));
-      let offset=0;chunks.forEach(c=>{compressed.set(c,offset);offset+=c.length;});
-      encoded='gz.'+btoa(String.fromCharCode(...compressed)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-    }else{encoded='b64.'+btoa(unescape(encodeURIComponent(json))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
-    const url=location.origin+location.pathname+'#sync='+encoded;
-    input.value=url;
-    const kb=(encoded.length/1024).toFixed(1);
-    status.innerHTML='<span style="color:var(--pos)">Link ready ('+kb+' KB). Open this link on your other device to import.</span>';
-  }catch(err){status.innerHTML='<span style="color:var(--neg)">Error: '+err.message+'</span>';}
+  const base={accounts:JSON.parse(JSON.stringify(accounts)),budget:JSON.parse(JSON.stringify(budgetState))};
+  localStorage.setItem(P+'syncBase_'+currentUser,JSON.stringify(base));
 }
-function copySyncLink(){
-  const input=document.getElementById('sync-link-input');
-  input.select();
-  navigator.clipboard.writeText(input.value).then(()=>{
-    document.getElementById('sync-link-status').innerHTML='<span style="color:var(--pos)">Copied to clipboard!</span>';
-  }).catch(()=>{document.execCommand('copy');document.getElementById('sync-link-status').innerHTML='<span style="color:var(--pos)">Copied!</span>';});
+function computeDiffs(){
+  if(!currentUser)return[];
+  let base;
+  try{base=JSON.parse(localStorage.getItem(P+'syncBase_'+currentUser));}catch(e){return[];}
+  if(!base)return[];
+  const diffs=[];
+  const baseById={};(base.accounts||[]).forEach(a=>baseById[a.id]=a);
+  // Account field changes and new accounts
+  accounts.forEach(a=>{
+    const ba=baseById[a.id];
+    if(!ba){diffs.push({t:'acct_new',acct:a});}
+    else{
+      if(ba.balance!==a.balance)diffs.push({t:'acct',id:a.id,name:a.name,f:'bal',v:a.balance});
+      if(ba.apy!==a.apy)diffs.push({t:'acct',id:a.id,name:a.name,f:'apy',v:a.apy});
+      if(ba.monthlyContrib!==a.monthlyContrib)diffs.push({t:'acct',id:a.id,name:a.name,f:'mc',v:a.monthlyContrib});
+    }
+  });
+  // Deleted accounts
+  (base.accounts||[]).forEach(ba=>{if(!accounts.find(a=>a.id===ba.id))diffs.push({t:'acct_del',id:ba.id,name:ba.name});});
+  // Budget diffs
+  const bb=base.budget||{};
+  if(budgetState.income!==bb.income)diffs.push({t:'bgt',f:'income',v:budgetState.income});
+  if(JSON.stringify(budgetState.expenses||[])!==JSON.stringify(bb.expenses||[]))diffs.push({t:'bgt',f:'expenses',v:budgetState.expenses});
+  return diffs;
+}
+function applyDiffs(diffs){
+  let changed=false;
+  diffs.forEach(d=>{
+    if(d.t==='acct'){
+      let idx=accounts.findIndex(a=>a.id===d.id);
+      if(idx===-1)idx=accounts.findIndex(a=>a.name===d.name);
+      if(idx===-1)return;
+      if(d.f==='bal'){accounts[idx].balance=d.v;const td=new Date().toISOString().split('T')[0];accounts[idx].history.push({date:td,bal:d.v});}
+      if(d.f==='apy')accounts[idx].apy=d.v;
+      if(d.f==='mc')accounts[idx].monthlyContrib=d.v;
+      changed=true;
+    }else if(d.t==='acct_new'){
+      if(!accounts.find(a=>a.id===d.acct.id)){accounts.push(d.acct);changed=true;}
+    }else if(d.t==='acct_del'){
+      const idx=accounts.findIndex(a=>a.id===d.id||a.name===d.name);
+      if(idx!==-1){accounts.splice(idx,1);changed=true;}
+    }else if(d.t==='bgt'){
+      if(d.f==='income')budgetState.income=d.v;
+      if(d.f==='expenses')budgetState.expenses=d.v;
+      changed=true;
+    }
+  });
+  if(changed){saveAccounts(accounts);saveData('budget',budgetState);setSyncBase();}
+  return changed;
+}
+
+// ===== QR SYNC — generate QR code from diff payload =====
+async function generateSyncQR(){
+  if(!currentUser)return;
+  document.getElementById('sync-modal').classList.add('hidden');
+  const overlay=document.getElementById('qr-overlay');
+  overlay.style.display='flex';
+  const summary=document.getElementById('qr-diff-summary');
+  summary.textContent='Computing changes...';
+  const diffs=computeDiffs();
+  if(!diffs.length){
+    summary.innerHTML='<span style="color:var(--text-dim)">No changes since last sync.<br>Use Download JSON to do a full device setup.</span>';
+    document.getElementById('qr-canvas').style.display='none';
+    return;
+  }
+  document.getElementById('qr-canvas').style.display='block';
+  const payload={v:'diff',ts:new Date().toISOString(),user:currentUser,changes:diffs};
+  const json=JSON.stringify(payload);
+  const encoded='b64.'+btoa(unescape(encodeURIComponent(json))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  const url=location.origin+location.pathname+'#sync='+encoded;
+  try{
+    await QRCode.toCanvas(document.getElementById('qr-canvas'),url,{width:260,margin:2,color:{dark:'#000000',light:'#ffffff'}});
+  }catch(e){summary.innerHTML='<span style="color:var(--neg)">QR generation failed: '+e.message+'</span>';return;}
+  const acctN=diffs.filter(d=>d.t.startsWith('acct')).length;
+  const bgtN=diffs.filter(d=>d.t==='bgt').length;
+  const parts=[];
+  if(acctN)parts.push(acctN+' account update'+(acctN>1?'s':''));
+  if(bgtN)parts.push('budget update');
+  summary.innerHTML='<span style="color:var(--pos)">'+parts.join(' · ')+' &nbsp;·&nbsp; '+(json.length/1024).toFixed(1)+' KB</span>';
+  // Clear sync base to now — this QR represents the current state
+  setSyncBase();
+}
+function closeQR(){
+  const overlay=document.getElementById('qr-overlay');
+  overlay.style.display='none';
+  document.getElementById('qr-canvas').style.display='block';
+}
+
+// ===== HASH IMPORT — called on login if #sync= hash present =====
+function decodeHashPayload(encoded){
+  if(encoded.startsWith('b64.')){
+    let b64=encoded.slice(4).replace(/-/g,'+').replace(/_/g,'/');
+    const pad=b64.length%4;if(pad)b64+='='.repeat(4-pad);
+    return decodeURIComponent(escape(atob(b64)));
+  }
+  return null;
 }
 async function importFromHash(){
   const hash=location.hash;
   if(!hash.startsWith('#sync='))return;
+  if(!currentUser){return;} // wait for login
   const encoded=hash.slice(6);
   try{
-    let json;
-    if(encoded.startsWith('gz.')){
-      const b64=encoded.slice(3).replace(/-/g,'+').replace(/_/g,'/');
-      const pad=b64.length%4;if(pad)b64+='='.repeat(4-pad);
-      const binary=atob(b64);
-      const bytes=new Uint8Array(binary.length);
-      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-      const ds=new DecompressionStream('gzip');
-      const writer=ds.writable.getWriter();
-      writer.write(bytes);writer.close();
-      const chunks=[];const reader=ds.readable.getReader();
-      while(true){const{done,value}=await reader.read();if(done)break;chunks.push(value);}
-      const all=new Uint8Array(chunks.reduce((a,c)=>a+c.length,0));
-      let off=0;chunks.forEach(c=>{all.set(c,off);off+=c.length;});
-      json=new TextDecoder().decode(all);
-    }else if(encoded.startsWith('b64.')){
-      let b64=encoded.slice(4).replace(/-/g,'+').replace(/_/g,'/');
-      const pad=b64.length%4;if(pad)b64+='='.repeat(4-pad);
-      json=decodeURIComponent(escape(atob(b64)));
-    }else return;
+    let json=decodeHashPayload(encoded);
+    if(!json)return;
     const data=JSON.parse(json);
-    if(!data.version||!data.accounts)return;
-    const ts=data.timestamp?new Date(data.timestamp).toLocaleString():'unknown';
-    if(!confirm('Import data from '+data.user+' ('+data.accounts.length+' accounts, exported '+ts+')? This will replace your current data.'))return;
-    // Need to be logged in to import
-    if(!currentUser){alert('Please log in first, then open this link again.');return;}
-    accounts=data.accounts;saveAccounts(accounts);
-    if(data.budget){budgetState=data.budget;saveData('budget',budgetState);}
-    if(data.retProfiles){retProfiles=data.retProfiles;saveData('retProfiles',retProfiles);}
-    if(data.debtProfiles){debtProfiles=data.debtProfiles;saveData('debtProfiles',debtProfiles);}
-    if(data.fooProgress){fooProgress=data.fooProgress;saveData('foo',fooProgress);}
-    if(data.customBg){saveData('customBg',data.customBg);applyBgColor(data.customBg);}
-    renderAll();
-    alert('Data imported successfully! ('+data.accounts.length+' accounts)');
+    // Diff sync
+    if(data.v==='diff'&&Array.isArray(data.changes)){
+      const ts=data.ts?new Date(data.ts).toLocaleString():'unknown';
+      const n=data.changes.length;
+      if(!confirm('Apply '+n+' change'+(n>1?'s':'')+' from '+(data.user||'another device')+' ('+ts+')? Incoming values will overwrite your local ones.'))return;
+      const changed=applyDiffs(data.changes);
+      if(changed){renderAll();alert('Sync applied — '+n+' change'+(n>1?'s':'')+' from '+(data.user||'another device')+'.');}
+      else alert('No matching accounts found. Use Download JSON for an initial full setup.');
+    }
+    // Full sync (legacy JSON files)
+    else if(data.version&&data.accounts){
+      const ts=data.timestamp?new Date(data.timestamp).toLocaleString():'unknown';
+      if(!confirm('Replace ALL data with full sync from '+(data.user||'device')+' ('+data.accounts.length+' accounts, '+ts+')?'))return;
+      accounts=data.accounts;saveAccounts(accounts);
+      if(data.budget){budgetState=data.budget;saveData('budget',budgetState);}
+      if(data.retProfiles){retProfiles=data.retProfiles;saveData('retProfiles',retProfiles);}
+      if(data.debtProfiles){debtProfiles=data.debtProfiles;saveData('debtProfiles',debtProfiles);}
+      if(data.fooProgress){fooProgress=data.fooProgress;saveData('foo',fooProgress);}
+      if(data.customBg){saveData('customBg',data.customBg);applyBgColor(data.customBg);}
+      setSyncBase();renderAll();
+      alert('Full sync applied — '+data.accounts.length+' accounts imported.');
+    }
     history.replaceState(null,'',location.pathname);
   }catch(e){alert('Failed to import sync data: '+e.message);}
 }
@@ -1574,6 +1639,7 @@ function initApp(){
   populateCategoryDropdown();
   buildRangeToggles();
   loadThemePrefs(); // Load saved theme + custom colors before first render
+  setSyncBase(); // Establish baseline for diff sync
   switchTab("dashboard");
   // Check for sync link hash after render
   if(location.hash.startsWith('#sync='))setTimeout(importFromHash,300);
