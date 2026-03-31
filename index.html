@@ -149,7 +149,7 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
 .toggle-btn{padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);background:transparent;color:var(--text-dim);transition:all .15s}.toggle-btn.active{background:var(--accent);color:var(--bg)}
 .chart-header-toggles{display:flex;align-items:center;gap:12px}
 .chart-grid{display:grid;grid-template-columns:240px 1fr;gap:20px;align-items:start}
-#pie-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+#pie-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:40px}
 .chart-wrap{position:relative;width:100%;height:320px}.chart-wrap canvas{width:100%!important}
 /* ===== ACCOUNT LISTINGS — two-column grid on dashboard showing asset/liability lists ===== */
 .acct-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:700px){
@@ -188,7 +188,7 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
   .proj-row{padding:8px 10px;gap:4px;font-size:12px}
   .proj-total{padding:10px;gap:4px;font-size:13px}
 }
-.acct-col{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}.acct-col h3{font-size:15px;font-weight:700;margin-bottom:14px}
+.acct-col{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-height:400px;overflow-y:auto;-webkit-overflow-scrolling:touch}.acct-col h3{font-size:15px;font-weight:700;margin-bottom:14px}
 .acct-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--bg-inner);cursor:pointer;transition:background .15s}.acct-row:hover{background:color-mix(in srgb,var(--bg-inner) 80%,var(--accent) 20%)}
 .acct-row.liab-row:hover{background:color-mix(in srgb,var(--bg-inner) 80%,var(--red) 20%)}
 .acct-row .left{display:flex;align-items:center;gap:10px}.acct-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}.acct-row .name{font-size:13px;font-weight:600}.acct-row .cat{font-size:11px;color:var(--text-dim)}.acct-row .bal{font-size:14px;font-weight:700}
@@ -435,7 +435,7 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 
     <!-- Summary cards visible on ALL tabs -->
     <div class="summary-row" id="summary-cards"></div>
     <div id="tab-dashboard">
-      <div class="chart-panel"><div class="chart-header"><div><h2 class="chart-title" id="chart-title">Net Worth Over Time</h2><span class="pct-badge" id="pct-badge">▲ 0%</span></div><div class="chart-header-toggles"><button class="toggle-btn" id="pie-toggle" onclick="togglePie()" style="border-radius:10px;background:var(--bg-inner);padding:7px 14px">Allocation</button><div class="toggle-row" id="view-toggles"><button class="toggle-btn active" data-view="networth" onclick="setChartView('networth')">Net Worth</button><button class="toggle-btn" data-view="assets" onclick="setChartView('assets')">Assets</button><button class="toggle-btn" data-view="liabilities" onclick="setChartView('liabilities')">Liabilities</button></div></div></div><div class="toggle-row" id="range-toggles" style="margin-bottom:18px"></div><div class="chart-grid" style="grid-template-columns:1fr"><div id="pie-wrap" style="display:none"><canvas id="pie-chart"></canvas></div><div class="chart-wrap"><canvas id="main-chart"></canvas></div></div></div>
+      <div class="chart-panel"><div class="chart-header"><div><h2 class="chart-title" id="chart-title">Net Worth Over Time</h2><span class="pct-badge" id="pct-badge">▲ 0%</span></div><div class="chart-header-toggles"><button class="toggle-btn" id="pie-toggle" onclick="togglePie()" style="border-radius:10px;background:var(--bg-inner);border:1px solid var(--border);padding:7px 14px;color:var(--text-dim)">Allocation</button><div class="toggle-row" id="view-toggles"><button class="toggle-btn active" data-view="networth" onclick="setChartView('networth')">Net Worth</button><button class="toggle-btn" data-view="assets" onclick="setChartView('assets')">Assets</button><button class="toggle-btn" data-view="liabilities" onclick="setChartView('liabilities')">Liabilities</button></div></div></div><div class="toggle-row" id="range-toggles" style="margin-bottom:18px"></div><div class="chart-grid" style="grid-template-columns:1fr"><div id="pie-wrap" style="display:none"><canvas id="pie-chart"></canvas></div><div class="chart-wrap"><canvas id="main-chart"></canvas></div></div></div>
       <div class="acct-grid" id="acct-listings"></div>
       <!-- Projection sliders — months (0-24) and years (1-10), last touched wins -->
       <div class="chart-panel" style="margin-top:24px">
@@ -988,6 +988,7 @@ function togglePie(){
   else{pw.style.display='none';cg.style.gridTemplateColumns='1fr';}
   // On mobile, always single column
   if(window.innerWidth<=700&&pieVisible)cg.style.gridTemplateColumns='1fr';
+  renderAccountListings(); // Show/hide per-account % changes
 }
 function renderPieChart(){
   if(!pieVisible)return;
@@ -1013,7 +1014,8 @@ function renderAccountListings(){
   document.getElementById("acct-listings").innerHTML=["asset","liability"].map(type=>{const f=accounts.filter(a=>a.type===type);const title=type==="asset"?ic("trendUp")+" Assets":ic("trendDown")+" Liabilities";const rows=f.map(a=>{const cl=ACCOUNT_CATEGORIES.find(c=>c.value===a.category)?.label||a.category;const bc=type==="asset"?"var(--accent)":"var(--red)";
     const sb=findBal(a.history,startStr);const cb=a.balance;let pc;const isPos=cb>=sb;
     if(sb===0)pc=cb>0?'+'+fmt(cb):fmt(cb);else pc=(isPos?'+':'')+((cb-sb)/Math.abs(sb)*100).toFixed(1)+'%';
-    return`<div class="acct-row ${type==="liability"?"liab-row":""}" onclick="inlineEditDashBal('${a.id}',this.querySelector('.bal'),'${bc}')" title="Click to edit balance"><div class="left"><div class="acct-dot" style="background:${a.color}"></div><div><div class="name">${a.name}</div><div class="cat">${cl}</div></div></div><div style="text-align:right"><span class="bal" id="dash-bal-${a.id}" style="color:${bc}">${fmt(a.balance)}</span><div style="font-size:10px;font-weight:600;color:${isPos?'var(--pos)':'var(--neg)'}">${isPos?'▲':'▼'} ${pc}</div></div></div>`;}).join("");return`<div class="acct-col"><h3>${title}</h3>${rows||'<div style="color:var(--text-dim);font-size:13px">No accounts</div>'}</div>`;}).join("");}
+    const pctHtml=pieVisible?`<div style="font-size:10px;font-weight:600;color:${isPos?'var(--pos)':'var(--neg)'}">${isPos?'▲':'▼'} ${pc}</div>`:'';
+    return`<div class="acct-row ${type==="liability"?"liab-row":""}" onclick="inlineEditDashBal('${a.id}',this.querySelector('.bal'),'${bc}')" title="Click to edit balance"><div class="left"><div class="acct-dot" style="background:${a.color}"></div><div><div class="name">${a.name}</div><div class="cat">${cl}</div></div></div><div style="text-align:right"><span class="bal" id="dash-bal-${a.id}" style="color:${bc}">${fmt(a.balance)}</span>${pctHtml}</div></div>`;}).join("");return`<div class="acct-col"><h3>${title}</h3>${rows||'<div style="color:var(--text-dim);font-size:13px">No accounts</div>'}</div>`;}).join("");}
 // ===== ACCOUNT CARDS (Accounts Tab) =====
 // Renders each account as a card with editable Balance, APY, Monthly contribution
 // Includes a History panel that shows all recorded balance entries with dates
