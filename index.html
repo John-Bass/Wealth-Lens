@@ -7,6 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#047857">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>WealthLens — Personal Finance Dashboard</title>
@@ -15,6 +18,17 @@
 // Clear any old service worker caches
 if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(r){r.unregister();});});}
 if('caches' in window){caches.keys().then(function(n){n.forEach(function(n){caches.delete(n);});});}
+// Version check — auto-reload when a new deploy is detected
+(function(){
+  var APP_VERSION="2026.03.30.1";
+  var vKey="wlt_appVersion";
+  var stored=localStorage.getItem(vKey);
+  if(stored&&stored!==APP_VERSION&&!sessionStorage.getItem("wlt_reloaded")){
+    localStorage.setItem(vKey,APP_VERSION);
+    sessionStorage.setItem("wlt_reloaded","1");
+    location.reload(true);
+  }else{localStorage.setItem(vKey,APP_VERSION);}
+})();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
@@ -137,15 +151,15 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
 .chart-wrap{position:relative;width:100%;height:320px}.chart-wrap canvas{width:100%!important}
 /* ===== ACCOUNT LISTINGS — two-column grid on dashboard showing asset/liability lists ===== */
 .acct-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:700px){
-  .navbar{display:grid;grid-template-columns:1fr auto 1fr;grid-template-rows:auto auto;padding:8px 14px;gap:2px}
+  .navbar{display:grid;grid-template-columns:1fr auto 1fr;grid-template-rows:auto auto auto;padding:8px 14px;gap:2px}
   .nav-brand{grid-column:1/4;grid-row:1;justify-self:center;font-size:18px;gap:8px}
   .nav-brand .ic-logo{width:28px;height:28px}
-  .nav-tabs{grid-column:1/4;grid-row:2;justify-self:center;gap:3px;padding:3px}
+  .nav-right{grid-column:1/4;grid-row:2;display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px;width:100%;padding-top:4px;position:relative}
+  .nav-tabs{grid-column:1/4;grid-row:3;justify-self:center;gap:3px;padding:3px}
   .nav-tab{padding:7px 14px;font-size:14px;min-width:auto}
-  .nav-right{grid-column:1/4;grid-row:3;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px;width:100%;padding-top:6px}
   .nav-right .nav-networth{grid-column:1;justify-self:start;text-align:left}
-  .nav-right #sync-btn{grid-column:2;justify-self:center}
-  .nav-right .nav-user-badge,.nav-right .nav-logout{grid-column:3}
+  .nav-right #sync-btn{position:absolute;top:6px;right:10px;z-index:101}
+  .nav-right .nav-user-badge,.nav-right .nav-logout{grid-column:2}
   .nav-right .nav-user-badge{justify-self:end;font-size:11px;padding:2px 6px;display:block;text-align:right;background:none;padding-bottom:0}
   .nav-right .nav-logout{justify-self:end;font-size:11px;padding:3px 8px;display:block;text-align:right}
   .nav-networth .label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
@@ -267,7 +281,7 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
 .proj-row .proj-num{text-align:right;font-weight:700}
 .proj-row .proj-change{text-align:right;font-size:11px;font-weight:600}
 .proj-total{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px;padding:12px 14px;border-radius:10px;margin-top:8px;font-size:14px;font-weight:800;background:var(--bg-inner);border:1px solid var(--border)}
-@media(max-width:700px){.navbar{grid-template-columns:1fr;justify-items:center}.nav-brand,.nav-tabs,.nav-right{justify-self:center}.proj-row,.proj-total{grid-template-columns:1.5fr 1fr 1fr;}.proj-row>:nth-child(4),.proj-row>:nth-child(5),.proj-total>:nth-child(4),.proj-total>:nth-child(5){display:none}}
+@media(max-width:700px){.proj-row,.proj-total{grid-template-columns:1.5fr 1fr 1fr;}.proj-row>:nth-child(4),.proj-row>:nth-child(5),.proj-total>:nth-child(4),.proj-total>:nth-child(5){display:none}}
 /* FOO checklist */
 /* ===== FINANCIAL ORDER OF OPERATIONS — 9-step checklist styling ===== */
 .foo-step{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-radius:10px;margin-bottom:6px;background:var(--bg-inner);cursor:pointer;transition:background .15s}
@@ -429,9 +443,18 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
   <div class="modal-card" style="max-width:500px">
     <h2>Sync Data Across Devices</h2>
     <p style="color:var(--text-dim);font-size:13px;margin-bottom:20px">Export your data to transfer to another device, or import data from another device.</p>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
-      <button class="btn-save" onclick="exportSyncData()" style="flex:1;min-width:140px">Export Data (Download)</button>
-      <button class="btn-save" onclick="emailSyncData()" style="flex:1;min-width:140px;background:var(--blue)">Export Data (Email)</button>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="btn-save" onclick="exportSyncData()" style="flex:1;min-width:120px">Download JSON</button>
+      <button class="btn-save" onclick="emailSyncData()" style="flex:1;min-width:120px;background:var(--blue)">Email JSON</button>
+      <button class="btn-save" onclick="generateSyncLink()" style="flex:1;min-width:120px;background:#7c3aed">Share Link</button>
+    </div>
+    <div id="sync-link-box" style="display:none;margin-bottom:16px;background:var(--bg-inner);border:1px solid var(--border);border-radius:10px;padding:12px">
+      <div style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">Sync Link (open on other device)</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="sync-link-input" readonly style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--card);font-size:11px;font-family:var(--font);color:var(--text);outline:none" onclick="this.select()">
+        <button onclick="copySyncLink()" style="padding:8px 14px;border-radius:8px;border:none;background:var(--accent);color:var(--bg);font-size:12px;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">Copy</button>
+      </div>
+      <div id="sync-link-status" style="font-size:11px;color:var(--text-dim);margin-top:4px"></div>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:16px">
       <label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;display:block;margin-bottom:8px">Import Data File</label>
@@ -1301,10 +1324,6 @@ function hexLuminance(hex){
 function resetColors(){
   // Remove all custom color overrides — revert to theme defaults
   document.documentElement.style.removeProperty('--page-bg');
-  
-  document.documentElement.style.removeProperty('--text');
-  document.documentElement.style.removeProperty('--text-dim');
-  document.documentElement.style.removeProperty('--text-faint');
   document.documentElement.style.removeProperty('--tab-active-bg');
   const logo=document.querySelector('.ic-logo');
   if(logo)logo.style.color='';
@@ -1443,6 +1462,83 @@ function importSyncData(file){
   reader.readAsText(file);
 }
 
+// ===== URL HASH SYNC — share data via compressed link =====
+async function generateSyncLink(){
+  if(!currentUser)return;
+  const status=document.getElementById('sync-link-status');
+  const box=document.getElementById('sync-link-box');
+  const input=document.getElementById('sync-link-input');
+  status.textContent='Generating link...';box.style.display='block';
+  try{
+    const data={version:1,user:currentUser,timestamp:new Date().toISOString(),accounts,budget:budgetState,retProfiles,debtProfiles,fooProgress:loadData('foo'),customBg:loadData('customBg')};
+    const json=JSON.stringify(data);
+    let encoded;
+    if(typeof CompressionStream!=='undefined'){
+      const cs=new CompressionStream('gzip');
+      const writer=cs.writable.getWriter();
+      writer.write(new TextEncoder().encode(json));writer.close();
+      const chunks=[];const reader=cs.readable.getReader();
+      while(true){const{done,value}=await reader.read();if(done)break;chunks.push(value);}
+      const compressed=new Uint8Array(chunks.reduce((a,c)=>a+c.length,0));
+      let offset=0;chunks.forEach(c=>{compressed.set(c,offset);offset+=c.length;});
+      encoded='gz.'+btoa(String.fromCharCode(...compressed)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    }else{encoded='b64.'+btoa(unescape(encodeURIComponent(json))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+    const url=location.origin+location.pathname+'#sync='+encoded;
+    input.value=url;
+    const kb=(encoded.length/1024).toFixed(1);
+    status.innerHTML='<span style="color:var(--pos)">Link ready ('+kb+' KB). Open this link on your other device to import.</span>';
+  }catch(err){status.innerHTML='<span style="color:var(--neg)">Error: '+err.message+'</span>';}
+}
+function copySyncLink(){
+  const input=document.getElementById('sync-link-input');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(()=>{
+    document.getElementById('sync-link-status').innerHTML='<span style="color:var(--pos)">Copied to clipboard!</span>';
+  }).catch(()=>{document.execCommand('copy');document.getElementById('sync-link-status').innerHTML='<span style="color:var(--pos)">Copied!</span>';});
+}
+async function importFromHash(){
+  const hash=location.hash;
+  if(!hash.startsWith('#sync='))return;
+  const encoded=hash.slice(6);
+  try{
+    let json;
+    if(encoded.startsWith('gz.')){
+      const b64=encoded.slice(3).replace(/-/g,'+').replace(/_/g,'/');
+      const pad=b64.length%4;if(pad)b64+='='.repeat(4-pad);
+      const binary=atob(b64);
+      const bytes=new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+      const ds=new DecompressionStream('gzip');
+      const writer=ds.writable.getWriter();
+      writer.write(bytes);writer.close();
+      const chunks=[];const reader=ds.readable.getReader();
+      while(true){const{done,value}=await reader.read();if(done)break;chunks.push(value);}
+      const all=new Uint8Array(chunks.reduce((a,c)=>a+c.length,0));
+      let off=0;chunks.forEach(c=>{all.set(c,off);off+=c.length;});
+      json=new TextDecoder().decode(all);
+    }else if(encoded.startsWith('b64.')){
+      let b64=encoded.slice(4).replace(/-/g,'+').replace(/_/g,'/');
+      const pad=b64.length%4;if(pad)b64+='='.repeat(4-pad);
+      json=decodeURIComponent(escape(atob(b64)));
+    }else return;
+    const data=JSON.parse(json);
+    if(!data.version||!data.accounts)return;
+    const ts=data.timestamp?new Date(data.timestamp).toLocaleString():'unknown';
+    if(!confirm('Import data from '+data.user+' ('+data.accounts.length+' accounts, exported '+ts+')? This will replace your current data.'))return;
+    // Need to be logged in to import
+    if(!currentUser){alert('Please log in first, then open this link again.');return;}
+    accounts=data.accounts;saveAccounts(accounts);
+    if(data.budget){budgetState=data.budget;saveData('budget',budgetState);}
+    if(data.retProfiles){retProfiles=data.retProfiles;saveData('retProfiles',retProfiles);}
+    if(data.debtProfiles){debtProfiles=data.debtProfiles;saveData('debtProfiles',debtProfiles);}
+    if(data.fooProgress){fooProgress=data.fooProgress;saveData('foo',fooProgress);}
+    if(data.customBg){saveData('customBg',data.customBg);applyBgColor(data.customBg);}
+    renderAll();
+    alert('Data imported successfully! ('+data.accounts.length+' accounts)');
+    history.replaceState(null,'',location.pathname);
+  }catch(e){alert('Failed to import sync data: '+e.message);}
+}
+
 // Master re-render function — called after any data change (balance update, account add/delete)
 // Renders budget bar + summary on every call, then tab-specific content
 function renderAll(){renderBudgetBar();renderSummary();if(currentTab==="dashboard"){renderMainChart();renderAccountListings();renderProjection();}if(currentTab==="accounts")renderAccountCards();if(currentTab==="tools"){renderRetirement();renderRetProfiles();renderDebt();renderDebtProfiles();renderRothTool();renderWealthMultiplier();renderFOO();}}
@@ -1479,6 +1575,8 @@ function initApp(){
   buildRangeToggles();
   loadThemePrefs(); // Load saved theme + custom colors before first render
   switchTab("dashboard");
+  // Check for sync link hash after render
+  if(location.hash.startsWith('#sync='))setTimeout(importFromHash,300);
 }
 initAuth();
 // Auto-fill remembered login credentials if saved
