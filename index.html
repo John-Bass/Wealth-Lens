@@ -147,6 +147,9 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
 .chart-title{font-size:18px;font-weight:700}.pct-badge{display:inline-block;font-size:13px;font-weight:700;padding:2px 10px;border-radius:20px;margin-top:4px}
 .toggle-row{display:flex;gap:4px;background:var(--bg-inner);border-radius:10px;padding:3px;flex-wrap:wrap}
 .toggle-btn{padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);background:transparent;color:var(--text-dim);transition:all .15s}.toggle-btn.active{background:var(--accent);color:var(--bg)}
+.chart-grid{display:grid;grid-template-columns:240px 1fr;gap:20px;align-items:start}
+#pie-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+#pie-legend{width:100%;max-width:240px}
 .chart-wrap{position:relative;width:100%;height:320px}.chart-wrap canvas{width:100%!important}
 /* ===== ACCOUNT LISTINGS — two-column grid on dashboard showing asset/liability lists ===== */
 .acct-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:700px){
@@ -171,6 +174,8 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
   .summary-card{padding:12px 14px;min-width:140px;margin-bottom:0}
   .summary-card .sc-val{font-size:20px}
   .chart-panel{padding:14px;margin-bottom:10px}
+  .chart-grid{grid-template-columns:1fr}
+  #pie-wrap{max-width:200px;margin:0 auto}
   .budget-bar{padding:12px;gap:6px;margin-bottom:10px}
   .budget-item .bi-input{width:100px;font-size:14px}
   .toggle-btn[data-range="2y"],.toggle-btn[data-range="3y"]{display:none}
@@ -430,7 +435,7 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 
     <!-- Summary cards visible on ALL tabs -->
     <div class="summary-row" id="summary-cards"></div>
     <div id="tab-dashboard">
-      <div class="chart-panel"><div class="chart-header"><div><h2 class="chart-title" id="chart-title">Net Worth Over Time</h2><span class="pct-badge" id="pct-badge">▲ 0%</span></div><div class="toggle-row" id="view-toggles"><button class="toggle-btn active" data-view="networth" onclick="setChartView('networth')">Net Worth</button><button class="toggle-btn" data-view="assets" onclick="setChartView('assets')">Assets</button><button class="toggle-btn" data-view="liabilities" onclick="setChartView('liabilities')">Liabilities</button></div></div><div class="toggle-row" id="range-toggles" style="margin-bottom:18px"></div><div class="chart-wrap"><canvas id="main-chart"></canvas></div></div>
+      <div class="chart-panel"><div class="chart-header"><div><h2 class="chart-title" id="chart-title">Net Worth Over Time</h2><span class="pct-badge" id="pct-badge">▲ 0%</span></div><div class="toggle-row" id="view-toggles"><button class="toggle-btn active" data-view="networth" onclick="setChartView('networth')">Net Worth</button><button class="toggle-btn" data-view="assets" onclick="setChartView('assets')">Assets</button><button class="toggle-btn" data-view="liabilities" onclick="setChartView('liabilities')">Liabilities</button></div></div><div class="toggle-row" id="range-toggles" style="margin-bottom:18px"></div><div class="chart-grid"><div id="pie-wrap"><canvas id="pie-chart"></canvas><div id="pie-legend"></div></div><div class="chart-wrap"><canvas id="main-chart"></canvas></div></div></div>
       <div class="acct-grid" id="acct-listings"></div>
       <!-- Projection sliders — months (0-24) and years (1-10), last touched wins -->
       <div class="chart-panel" style="margin-top:24px">
@@ -619,7 +624,7 @@ async function handleReset(){const btn=document.getElementById("reset-action-btn
   const stored=users[u]?users[u].answer:'';const hashedAns=await hashPw(a,u);
   const ansMatch=stored===hashedAns||(stored.length<64&&stored===a);
   if(ansMatch){document.getElementById("reset-step2").classList.remove("hidden");btn.textContent="Reset Password";btn.dataset.step="2";err.style.color="var(--accent)";err.textContent="✓ Verified. Enter new password.";}else{err.style.color="var(--red)";err.textContent="Incorrect.";}}else if(step==="2"){const np=document.getElementById("reset-newpass").value,cf=document.getElementById("reset-confirm").value,u=btn.dataset.resetUser;if(!np||np.length<6){err.style.color="var(--red)";err.textContent="Min 6 characters.";return;}if(np!==cf){err.style.color="var(--red)";err.textContent="Passwords don't match.";return;}const users=getUsers();if(users[u]){users[u].password=await hashPw(np,u);setUsers(users);}document.getElementById("reset-user").disabled=false;err.style.color="var(--accent)";err.textContent="✓ Password updated!";setTimeout(showLoginForm,1500);}}
-function logout(){currentUser=null;sessionKey=null;accounts=[];budgetState={income:0,expenses:[]};retProfiles=[];debtProfiles=[];fooProgress=[];document.getElementById("app-shell").classList.add("hidden");document.getElementById("login-screen").classList.remove("hidden");document.getElementById("login-pass").value="";document.getElementById("login-user").value="";document.getElementById("login-error").textContent="";
+function logout(){currentUser=null;sessionKey=null;accounts=[];budgetState={income:0,expenses:[]};retProfiles=[];debtProfiles=[];fooProgress=[];if(pieChartInstance){pieChartInstance.destroy();pieChartInstance=null;}document.getElementById("app-shell").classList.add("hidden");document.getElementById("login-screen").classList.remove("hidden");document.getElementById("login-pass").value="";document.getElementById("login-user").value="";document.getElementById("login-error").textContent="";
   // Hide demo banner after first use
   const banner=document.getElementById("demo-banner");
   if(banner&&localStorage.getItem(P+"demoUsed"))banner.style.display="none";
@@ -693,7 +698,7 @@ function findBal(h,td){if(!h||h.length===0)return 0;for(let i=h.length-1;i>=0;i-
 // currentTab: which tab is showing (dashboard/accounts/tools)
 // chartRange/chartView: what the main chart is displaying
 let accounts=[],currentTab="dashboard",chartRange="1y",chartView="networth",editingId=null;
-let mainChartInstance=null,retChartInstance=null,debtChartInstance=null,rothChartInstance=null;
+let mainChartInstance=null,pieChartInstance=null,retChartInstance=null,debtChartInstance=null,rothChartInstance=null;
 // Calculator states
 // ===== CALCULATOR STATES =====
 // Each calculator tool has its own state object holding the user's inputs
@@ -972,6 +977,30 @@ function renderSummary(){const t=computeTotals();const d=buildChartData();const 
 // Draws the line chart using Chart.js — shows Net Worth, Assets, or Liabilities over time
 // Switches datasets based on which toggle button (NW/Assets/Liabilities) is active
 function renderMainChart(){const d=buildChartData();const c=computePeriodChange(d,chartView);const ti={networth:"Net Worth",assets:"Assets",liabilities:"Liabilities"};document.getElementById("chart-title").textContent=ti[chartView]+" Over Time";const bg=document.getElementById("pct-badge");if(c.fromZero){bg.textContent=c.pct;bg.style.background=c.positive?"#22c55e20":"#ef444420";bg.style.color=c.positive?"var(--pos)":"var(--neg)";}else{bg.textContent=(c.positive?"▲":"▼")+" "+c.pct+"%";bg.style.background=c.positive?"#22c55e20":"#ef444420";bg.style.color=c.positive?"var(--pos)":"var(--neg)";}let v,lc,fc;if(chartView==="assets"){v=d.assets;lc='#0284c7';fc='rgba(2,132,199,.15)';}else if(chartView==="liabilities"){v=d.liabilities;lc='#dc2626';fc='rgba(220,38,38,.15)';}else{v=d.netWorth;lc='#047857';fc='rgba(4,120,87,.15)';}if(mainChartInstance)mainChartInstance.destroy();mainChartInstance=new Chart(document.getElementById("main-chart").getContext("2d"),{type:"line",data:{labels:d.labels,datasets:[{label:ti[chartView],data:v,borderColor:lc,backgroundColor:fc,borderWidth:2.5,fill:true,tension:.3,pointRadius:0,pointHitRadius:10}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#141922",borderColor:"#232d3f",borderWidth:1,titleColor:"#7a879e",bodyColor:"#e8edf5",padding:12,callbacks:{label:function(x){return x.dataset.label+": "+fmt(x.parsed.y);}}}},scales:{x:{ticks:{color:"#7a879e",font:{size:11},maxTicksLimit:10},grid:{color:"#232d3f",drawBorder:false}},y:{ticks:{color:"#7a879e",font:{size:11},callback:function(v){return v>=1000?"$"+(v/1000).toFixed(0)+"k":"$"+v;}},grid:{color:"#232d3f",drawBorder:false}}},interaction:{intersect:false,mode:"index"}}});}
+// ===== PIE/DOUGHNUT CHART — allocation breakdown by account =====
+function renderPieChart(){
+  const el=document.getElementById('pie-chart');if(!el)return;
+  let filtered;
+  if(chartView==='assets')filtered=accounts.filter(a=>a.type==='asset');
+  else if(chartView==='liabilities')filtered=accounts.filter(a=>a.type==='liability');
+  else filtered=accounts.slice();
+  if(pieChartInstance)pieChartInstance.destroy();
+  if(!filtered.length){el.style.display='none';const lg=document.getElementById('pie-legend');if(lg)lg.innerHTML='';return;}
+  el.style.display='block';
+  const labels=filtered.map(a=>a.name);
+  const data=filtered.map(a=>Math.abs(a.balance));
+  const colors=filtered.map(a=>a.color);
+  pieChartInstance=new Chart(el.getContext('2d'),{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:true,cutout:'55%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#141922',borderColor:'#232d3f',borderWidth:1,titleColor:'#7a879e',bodyColor:'#e8edf5',padding:12,callbacks:{label:function(ctx){const total=ctx.dataset.data.reduce((s,v)=>s+v,0);const pct=((ctx.parsed/total)*100).toFixed(1);return ctx.label+': '+fmt(ctx.parsed)+' ('+pct+'%)';}}}}}});
+  renderPieLegend(filtered);
+}
+function renderPieLegend(filtered){
+  const total=filtered.reduce((s,a)=>s+Math.abs(a.balance),0);
+  const wrap=document.getElementById('pie-legend');if(!wrap)return;
+  wrap.innerHTML=filtered.map(a=>{
+    const pct=total>0?((Math.abs(a.balance)/total)*100).toFixed(1):'0.0';
+    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px"><div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${a.color};flex-shrink:0"></span><span style="color:var(--text);font-weight:600">${a.name}</span></div><span style="color:var(--text-dim)">${pct}%</span></div>`;
+  }).join('');
+}
 // Renders the two-column account list on the Dashboard (Assets left, Liabilities right)
 function renderAccountListings(){document.getElementById("acct-listings").innerHTML=["asset","liability"].map(type=>{const f=accounts.filter(a=>a.type===type);const title=type==="asset"?ic("trendUp")+" Assets":ic("trendDown")+" Liabilities";const rows=f.map(a=>{const cl=ACCOUNT_CATEGORIES.find(c=>c.value===a.category)?.label||a.category;const bc=type==="asset"?"var(--accent)":"var(--red)";return`<div class="acct-row ${type==="liability"?"liab-row":""}" onclick="inlineEditDashBal('${a.id}',this.querySelector('.bal'),'${bc}')" title="Click to edit balance"><div class="left"><div class="acct-dot" style="background:${a.color}"></div><div><div class="name">${a.name}</div><div class="cat">${cl}</div></div></div><span class="bal" id="dash-bal-${a.id}" style="color:${bc}">${fmt(a.balance)}</span></div>`;}).join("");return`<div class="acct-col"><h3>${title}</h3>${rows||'<div style="color:var(--text-dim);font-size:13px">No accounts</div>'}</div>`;}).join("");}
 // ===== ACCOUNT CARDS (Accounts Tab) =====
@@ -1448,7 +1477,7 @@ function loadThemePrefs(){
 // Always re-renders budget bar and summary cards (visible on all tabs)
 // Only renders tab-specific content for the active tab
 function switchTab(t){currentTab=t;document.body.dataset.tab=t;document.querySelectorAll(".nav-tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));document.getElementById("tab-dashboard").classList.toggle("hidden",t!=="dashboard");document.getElementById("tab-accounts").classList.toggle("hidden",t!=="accounts");document.getElementById("tab-tools").classList.toggle("hidden",t!=="tools");renderBudgetBar();renderSummary();if(t==="dashboard"){renderMainChart();renderAccountListings();renderProjection();}if(t==="accounts")renderAccountCards();if(t==="tools"){renderRetirement();renderRetProfiles();renderDebt();renderDebtProfiles();renderRothTool();renderWealthMultiplier();renderFOO();}}
-function setChartView(v){chartView=v;document.querySelectorAll("#view-toggles .toggle-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));renderMainChart();renderSummary();}
+function setChartView(v){chartView=v;document.querySelectorAll("#view-toggles .toggle-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));renderMainChart();renderPieChart();renderSummary();}
 function setChartRange(r){chartRange=r;document.querySelectorAll("#range-toggles .toggle-btn").forEach(b=>b.classList.toggle("active",b.dataset.range===r));renderMainChart();renderSummary();}
 function populateCategoryDropdown(){const s=document.getElementById("modal-cat");const a=ACCOUNT_CATEGORIES.filter(c=>c.type==="asset");const l=ACCOUNT_CATEGORIES.filter(c=>c.type==="liability");s.innerHTML=`<optgroup label="━━ Assets ━━">${a.map(c=>`<option value="${c.value}">${c.label}</option>`).join("")}</optgroup><optgroup label="━━ Liabilities ━━">${l.map(c=>`<option value="${c.value}">${c.label}</option>`).join("")}</optgroup>`;}
 function updateTypeIndicator(){const c=document.getElementById("modal-cat").value;const d=ACCOUNT_CATEGORIES.find(x=>x.value===c);const e=document.getElementById("modal-type-display");if(d&&d.type==="liability"){e.textContent="Liability";e.style.color="var(--red)";}else{e.textContent="Asset";e.style.color="var(--accent)";}}
@@ -1706,7 +1735,7 @@ async function importFromHash(){
 
 // Master re-render function — called after any data change (balance update, account add/delete)
 // Renders budget bar + summary on every call, then tab-specific content
-function renderAll(){renderBudgetBar();renderSummary();if(currentTab==="dashboard"){renderMainChart();renderAccountListings();renderProjection();}if(currentTab==="accounts")renderAccountCards();if(currentTab==="tools"){renderRetirement();renderRetProfiles();renderDebt();renderDebtProfiles();renderRothTool();renderWealthMultiplier();renderFOO();}}
+function renderAll(){renderBudgetBar();renderSummary();if(currentTab==="dashboard"){renderMainChart();renderPieChart();renderAccountListings();renderProjection();}if(currentTab==="accounts")renderAccountCards();if(currentTab==="tools"){renderRetirement();renderRetProfiles();renderDebt();renderDebtProfiles();renderRothTool();renderWealthMultiplier();renderFOO();}}
 function buildRangeToggles(){document.getElementById("range-toggles").innerHTML=TIME_RANGES.map(r=>`<button class="toggle-btn${r.value===chartRange?' active':''}" data-range="${r.value}" onclick="setChartRange('${r.value}')">${r.label}</button>`).join("");}
 // ===== APP INITIALIZATION =====
 // Called after successful login — loads all user data from localStorage
