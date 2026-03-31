@@ -134,6 +134,9 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
 .nav-networth{text-align:right}.nav-networth .label{font-size:11px;color:var(--text-dim);font-weight:600;text-transform:uppercase}.nav-networth .value{font-size:18px;font-weight:800;color:var(--accent)}
 .nav-user-badge{font-size:12px;color:var(--text-dim);font-weight:600;padding:4px 10px;border-radius:6px;background:var(--bg-inner)}
 .nav-logout{background:none;border:1px solid var(--border);color:var(--text-dim);padding:6px 14px;border-radius:8px;font-size:12px;font-family:var(--font);cursor:pointer;font-weight:600}
+.nav-settings-btn{background:none;border:1px solid var(--border);color:var(--text-dim);padding:6px 14px;border-radius:8px;font-size:12px;font-family:var(--font);cursor:pointer;font-weight:600;transition:all .2s}
+.nav-settings-btn:hover{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
+.nav-settings-btn.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
 /* Main content container — centered, max width 1040px */
 .content{max-width:1040px;margin:0 auto;padding:20px 20px 32px}
 /* ===== SUMMARY CARDS — the 4 cards showing Assets, Liabilities, NW, Accounts ===== */
@@ -160,7 +163,8 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
   .nav-tabs{grid-column:1/4;grid-row:2;justify-self:center;gap:3px;padding:3px}
   .nav-tab{padding:7px 12px;font-size:13px;min-width:auto}
   .nav-right #sync-btn{display:none}
-  #settings-fab{display:flex!important;position:fixed;bottom:18px;right:18px;z-index:200;padding:12px 24px;border-radius:14px;font-size:14px;font-weight:700;font-family:var(--font);border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.18);align-items:center;gap:6px}
+  #settings-fab{display:flex!important;position:fixed;bottom:18px;right:18px;z-index:200;padding:12px 24px;border-radius:14px;font-size:14px;font-weight:700;font-family:var(--font);border:1px solid var(--border);background:var(--card);color:var(--text-dim);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.18);align-items:center;gap:6px;transition:all .2s}
+  #settings-fab:hover,#settings-fab:active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
   .nav-right .nav-user-badge{display:none}
   .nav-right .nav-logout{font-size:11px;padding:3px 8px}
   .nav-networth .label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim)}
@@ -188,7 +192,7 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
   .proj-row{padding:8px 10px;gap:4px;font-size:12px}
   .proj-total{padding:10px;gap:4px;font-size:13px}
 }
-.acct-col{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-height:400px;overflow-y:auto;-webkit-overflow-scrolling:touch}.acct-col h3{font-size:15px;font-weight:700;margin-bottom:14px}
+.acct-col{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;max-height:400px;overflow-y:auto;-webkit-overflow-scrolling:touch}.acct-col h3{font-size:15px;font-weight:700;margin-bottom:14px;position:sticky;top:0;background:var(--card);padding-bottom:8px;z-index:1}
 .acct-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;margin-bottom:6px;background:var(--bg-inner);cursor:pointer;transition:background .15s}.acct-row:hover{background:color-mix(in srgb,var(--bg-inner) 80%,var(--accent) 20%)}
 .acct-row.liab-row:hover{background:color-mix(in srgb,var(--bg-inner) 80%,var(--red) 20%)}
 .acct-row .left{display:flex;align-items:center;gap:10px}.acct-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}.acct-row .name{font-size:13px;font-weight:600}.acct-row .cat{font-size:11px;color:var(--text-dim)}.acct-row .bal{font-size:14px;font-weight:700}
@@ -424,7 +428,7 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 
     </div>
     <div class="nav-right">
       <span class="nav-user-badge" id="nav-username"></span>
-      <button id="sync-btn" style="padding:6px 12px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer" onclick="openSettings()">Settings</button>
+      <button id="sync-btn" class="nav-settings-btn" onclick="openSettings()">Settings</button>
       <button class="nav-logout" onclick="logout()">Sign Out</button>
     </div>
     <button id="settings-fab" class="hidden" onclick="openSettings()"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 10a2 2 0 100-4 2 2 0 000 4zm6.3-2.5l-1.1-.2a5.2 5.2 0 00-.4-1l.7-.9a.5.5 0 000-.7l-.7-.7a.5.5 0 00-.7 0l-.9.7a5.2 5.2 0 00-1-.4l-.2-1.1a.5.5 0 00-.5-.4h-1a.5.5 0 00-.5.4l-.2 1.1a5.2 5.2 0 00-1 .4l-.9-.7a.5.5 0 00-.7 0l-.7.7a.5.5 0 000 .7l.7.9a5.2 5.2 0 00-.4 1l-1.1.2a.5.5 0 00-.4.5v1a.5.5 0 00.4.5l1.1.2a5.2 5.2 0 00.4 1l-.7.9a.5.5 0 000 .7l.7.7a.5.5 0 00.7 0l.9-.7a5.2 5.2 0 001 .4l.2 1.1a.5.5 0 00.5.4h1a.5.5 0 00.5-.4l.2-1.1a5.2 5.2 0 001-.4l.9.7a.5.5 0 00.7 0l.7-.7a.5.5 0 000-.7l-.7-.9a5.2 5.2 0 00.4-1l1.1-.2a.5.5 0 00.4-.5v-1a.5.5 0 00-.4-.5z"/></svg> Settings</button>
@@ -435,7 +439,7 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 
     <!-- Summary cards visible on ALL tabs -->
     <div class="summary-row" id="summary-cards"></div>
     <div id="tab-dashboard">
-      <div class="chart-panel"><div class="chart-header"><div><h2 class="chart-title" id="chart-title">Net Worth Over Time</h2><span class="pct-badge" id="pct-badge">▲ 0%</span></div><div class="chart-header-toggles"><button class="toggle-btn" id="pie-toggle" onclick="togglePie()" style="border-radius:10px;background:var(--bg-inner);border:1px solid var(--border);padding:7px 14px;color:var(--text-dim)">Allocation</button><div class="toggle-row" id="view-toggles"><button class="toggle-btn active" data-view="networth" onclick="setChartView('networth')">Net Worth</button><button class="toggle-btn" data-view="assets" onclick="setChartView('assets')">Assets</button><button class="toggle-btn" data-view="liabilities" onclick="setChartView('liabilities')">Liabilities</button></div></div></div><div class="toggle-row" id="range-toggles" style="margin-bottom:18px"></div><div class="chart-grid" style="grid-template-columns:1fr"><div id="pie-wrap" style="display:none"><canvas id="pie-chart"></canvas></div><div class="chart-wrap"><canvas id="main-chart"></canvas></div></div></div>
+      <div class="chart-panel"><div class="chart-header"><div><h2 class="chart-title" id="chart-title">Net Worth Over Time</h2><span class="pct-badge" id="pct-badge">▲ 0%</span></div><div class="chart-header-toggles"><button class="toggle-btn" id="pie-toggle" onclick="togglePie()" style="border-radius:10px;border:1px solid var(--border);padding:7px 14px">Allocation</button><div class="toggle-row" id="view-toggles"><button class="toggle-btn active" data-view="networth" onclick="setChartView('networth')">Net Worth</button><button class="toggle-btn" data-view="assets" onclick="setChartView('assets')">Assets</button><button class="toggle-btn" data-view="liabilities" onclick="setChartView('liabilities')">Liabilities</button></div></div></div><div class="toggle-row" id="range-toggles" style="margin-bottom:18px"></div><div class="chart-grid" style="grid-template-columns:1fr"><div id="pie-wrap" style="display:none"><canvas id="pie-chart"></canvas></div><div class="chart-wrap"><canvas id="main-chart"></canvas></div></div></div>
       <div class="acct-grid" id="acct-listings"></div>
       <!-- Projection sliders — months (0-24) and years (1-10), last touched wins -->
       <div class="chart-panel" style="margin-top:24px">
@@ -506,7 +510,7 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 
 </div>
 
 <!-- Settings Modal — mobile-focused, themes + sync access -->
-<div id="settings-modal" class="modal-overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+<div id="settings-modal" class="modal-overlay hidden" onclick="if(event.target===this){this.classList.add('hidden');const sb=document.getElementById('sync-btn');if(sb)sb.classList.remove('active')}">
   <div class="modal-card" style="max-width:400px">
     <h2>Settings</h2>
     <div style="margin-bottom:20px">
@@ -517,7 +521,7 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 
       <div style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Data</div>
       <button class="btn-save" onclick="document.getElementById('settings-modal').classList.add('hidden');openSyncModal()" style="width:100%;margin-bottom:8px">Sync / Export / Import</button>
     </div>
-    <div class="modal-actions"><button class="btn-cancel" onclick="document.getElementById('settings-modal').classList.add('hidden')">Close</button></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="document.getElementById('settings-modal').classList.add('hidden');const sb=document.getElementById('sync-btn');if(sb)sb.classList.remove('active')">Close</button></div>
   </div>
 </div>
 
@@ -1531,6 +1535,7 @@ function inlineEditDashBal(id,el,color){
 function openSyncModal(){document.getElementById('sync-modal').classList.remove('hidden');document.getElementById('sync-status').textContent='';}
 function openSettings(){
   const m=document.getElementById('settings-modal');m.classList.remove('hidden');
+  const sb=document.getElementById('sync-btn');if(sb)sb.classList.add('active');
   const themes=[
     {id:'',label:'Kyoto Dawn',desc:'Warm light'},
     {id:'theme-warm-dark',label:'Kyoto Dusk',desc:'Warm dark'},
