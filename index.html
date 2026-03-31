@@ -13,7 +13,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>WealthLens — Personal Finance Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script>
 // Clear any old service worker caches
 if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(r){r.unregister();});});}
@@ -37,34 +37,32 @@ if('caches' in window){caches.keys().then(function(n){n.forEach(function(n){cach
 /* ===== CSS VARIABLES =====
    These define all the colors, fonts used across the entire app.
    Change a color here and it changes everywhere. */
-:root{--bg:#0c1017;--card:#141922;--border:#232d3f;--accent:#34d399;--accent-dim:#34d39930;--blue:#60a5fa;--red:#f87171;--red-dim:#f8717130;--gold:#fbbf24;--purple:#c084fc;--text:#e8edf5;--text-dim:#7a879e;--text-faint:#4a556b;--font:'Manrope','Segoe UI',sans-serif;--card-blur:none;--card-shadow:none;--radius:14px;--pos:#22c55e;--neg:#ef4444;--bg-inner:#0c1017}
+/* Default = Warm Minimal Light */
+:root{--bg:#faf8f4;--bg-inner:#f5f1eb;--card:#ffffff;--border:#ebe7df;--accent:#059669;--accent-dim:#05966920;--blue:#2563eb;--red:#dc2626;--red-dim:#dc262620;--gold:#d97706;--purple:#7c3aed;--text:#2d2a24;--text-dim:#8a8478;--text-faint:#b8b0a2;--font:'Manrope','DM Sans','Segoe UI',sans-serif;--card-blur:none;--card-shadow:0 1px 4px rgba(0,0,0,.04);--radius:16px;--pos:#22c55e;--neg:#ef4444}
 
-/* ===== THEME: Minimalist — clean, typography-driven, data-first ===== */
-body.theme-minimal{--bg:#f8f9fb;--bg-inner:#f8f9fb;--card:#ffffff;--border:#e5e7eb;--accent:#2563eb;--accent-dim:#2563eb20;--blue:#3b82f6;--red:#ef4444;--red-dim:#ef444420;--gold:#d97706;--purple:#7c3aed;--text:#1a1a2e;--text-dim:#6b7280;--text-faint:#9ca3af;--font:'Manrope','Segoe UI',sans-serif;--card-shadow:0 1px 3px rgba(0,0,0,.06);--radius:12px}
-body.theme-minimal .navbar{background:#fff;border-bottom-color:#e5e7eb}
-body.theme-minimal .chart-wrap canvas,body.theme-minimal .tool-chart-wrap canvas{filter:contrast(1.05)}
+/* ===== THEME: Warm Minimal Dark ===== */
+body.theme-warm-dark{--bg:#1a1814;--bg-inner:#1e1c16;--card:#242018;--border:#3a3630;--accent:#34d399;--accent-dim:#34d39925;--blue:#60a5fa;--red:#f87171;--red-dim:#f8717125;--gold:#fbbf24;--purple:#c084fc;--text:#e8e4dc;--text-dim:#9a9488;--text-faint:#5a5448;--card-shadow:0 2px 8px rgba(0,0,0,.2)}
+body.theme-warm-dark .navbar{background:#242018;border-bottom-color:#3a3630}
 
-/* ===== THEME: Glassmorphism — frosted glass, neon, futuristic ===== */
-body.theme-glass{--bg:#0a0a1e;--bg-inner:#0a0a1e;--card:rgba(255,255,255,.05);--border:rgba(255,255,255,.1);--accent:#22d3ee;--accent-dim:#22d3ee25;--blue:#818cf8;--red:#fb7185;--red-dim:#fb718525;--gold:#fde68a;--purple:#c084fc;--text:#f0f4ff;--text-dim:#8b95b0;--text-faint:#4a5270;--card-blur:blur(16px);--card-shadow:0 8px 32px rgba(0,0,0,.3);--radius:16px}
-body.theme-glass .summary-card,body.theme-glass .chart-panel,body.theme-glass .tool-panel,body.theme-glass .acct-card,body.theme-glass .budget-bar,body.theme-glass .acct-col{backdrop-filter:var(--card-blur);-webkit-backdrop-filter:var(--card-blur);box-shadow:var(--card-shadow)}
-body.theme-glass .navbar{background:rgba(10,10,30,.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+/* ===== THEME: Executive Suite Light ===== */
+body.theme-exec-light{--bg:#f8f7f4;--bg-inner:#f2f0ec;--card:#ffffff;--border:#e8e4dc;--accent:#b8860b;--accent-dim:#b8860b18;--blue:#4a6fa5;--red:#c0392b;--red-dim:#c0392b18;--gold:#b8860b;--purple:#6c3483;--text:#1c1c1c;--text-dim:#6b6b6b;--text-faint:#a0a0a0;--font:'Manrope','Georgia',serif;--card-shadow:0 1px 4px rgba(0,0,0,.04);--radius:12px}
+body.theme-exec-light .navbar{background:#fff;border-bottom-color:#e8e4dc}
+body.theme-exec-light .summary-card{border-top:2px solid var(--accent)}
 
-/* ===== THEME: Bento — card-based grid, warm muted, organic ===== */
-body.theme-bento{--bg:#f5f1eb;--bg-inner:#f5f1eb;--card:#ffffff;--border:#e0dbd3;--accent:#047857;--accent-dim:#04785720;--blue:#0284c7;--red:#dc2626;--red-dim:#dc262620;--gold:#b45309;--purple:#7e22ce;--text:#27241d;--text-dim:#78716c;--text-faint:#a8a29e;--font:'Manrope','Georgia',serif;--card-shadow:0 2px 8px rgba(0,0,0,.05);--radius:16px}
-body.theme-bento .navbar{background:#fff;border-bottom-color:#e0dbd3}
+/* ===== THEME: Executive Suite Dark ===== */
+body.theme-exec-dark{--bg:#0a0b0f;--bg-inner:#1a1b22;--card:#14151b;--border:#1e1f26;--accent:#c9a84c;--accent-dim:#c9a84c22;--blue:#60a5fa;--red:#ef4444;--red-dim:#ef444422;--gold:#c9a84c;--purple:#a78bfa;--text:#e4e4e7;--text-dim:#a1a1aa;--text-faint:#52525b;--font:'Manrope','Georgia',serif;--card-shadow:0 2px 8px rgba(0,0,0,.3);--radius:12px}
+body.theme-exec-dark .navbar{background:#14151b;border-bottom-color:#1e1f26}
+body.theme-exec-dark .summary-card{border-top:2px solid var(--accent)}
 
-/* ===== THEME: Luxury — white canvas, gold accents, premium ===== */
-body.theme-luxury{--bg:#fefdfb;--bg-inner:#fefdfb;--card:#ffffff;--border:#e8e4dc;--accent:#b8860b;--accent-dim:#b8860b18;--blue:#4a6fa5;--red:#c0392b;--red-dim:#c0392b18;--gold:#b8860b;--purple:#6c3483;--text:#1c1c1c;--text-dim:#6b6b6b;--text-faint:#a0a0a0;--font:'Manrope','Didot','Georgia',serif;--card-shadow:0 1px 4px rgba(0,0,0,.04);--radius:10px}
-body.theme-luxury .navbar{background:#fff;border-bottom:1px solid #e8e4dc}
-body.theme-luxury .nav-tab.active{background:var(--accent);color:#fff}
-body.theme-luxury .btn-primary{background:var(--accent)}
-body.theme-luxury .summary-card{border-top-width:2px}
+/* ===== THEME: Fintech Gradient Light ===== */
+body.theme-fintech-light{--bg:#f5f3ff;--bg-inner:#eeecfa;--card:#ffffff;--border:#e4e0f0;--accent:#6366f1;--accent-dim:#6366f120;--blue:#818cf8;--red:#f43f5e;--red-dim:#f43f5e20;--gold:#d97706;--purple:#a855f7;--text:#1e1b4b;--text-dim:#6b6899;--text-faint:#a5a2c8;--card-shadow:0 2px 8px rgba(99,102,241,.06);--radius:16px}
+body.theme-fintech-light .navbar{background:#fff;border-bottom-color:#e4e0f0}
 
-/* ===== THEME: Bold — high contrast, action-oriented, impactful ===== */
-body.theme-bold{--bg:#111111;--bg-inner:#111111;--card:#1a1a1a;--border:#333;--accent:#ff6b35;--accent-dim:#ff6b3525;--blue:#4ecdc4;--red:#ff6b6b;--red-dim:#ff6b6b25;--gold:#ffe66d;--purple:#a855f7;--text:#ffffff;--text-dim:#999;--text-faint:#555;--font:'Manrope','Impact',sans-serif;--card-shadow:0 4px 16px rgba(0,0,0,.4);--radius:12px}
-body.theme-bold .navbar{background:#111;border-bottom:2px solid var(--accent)}
-body.theme-bold .summary-card .sc-val{font-size:30px}
-body.theme-bold .chart-title{font-size:22px}
+/* ===== THEME: Fintech Gradient Dark ===== */
+body.theme-fintech-dark{--bg:#0f0b1e;--bg-inner:#13102a;--card:rgba(255,255,255,.04);--border:rgba(255,255,255,.06);--accent:#a855f7;--accent-dim:#a855f722;--blue:#818cf8;--red:#f472b6;--red-dim:#f472b622;--gold:#fbbf24;--purple:#c084fc;--text:#e8e4f0;--text-dim:#8b85a0;--text-faint:#4a4560;--card-blur:blur(16px);--card-shadow:0 8px 32px rgba(0,0,0,.3);--radius:16px}
+body.theme-fintech-dark .summary-card,body.theme-fintech-dark .chart-panel,body.theme-fintech-dark .tool-panel,body.theme-fintech-dark .acct-card,body.theme-fintech-dark .budget-bar,body.theme-fintech-dark .acct-col{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--card-shadow)}
+body.theme-fintech-dark .navbar{background:rgba(15,11,30,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+body.theme-fintech-dark body::before{background:radial-gradient(ellipse at 20% 0%,rgba(99,102,241,.15),transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(168,85,247,.1),transparent 50%)}
 
 /* ===== Apply theme radius and shadows globally ===== */
 .summary-card,.chart-panel,.tool-panel,.acct-card,.acct-col,.budget-bar,.modal-card,.login-card{border-radius:var(--radius);box-shadow:var(--card-shadow,0 1px 4px rgba(0,0,0,.04))}
@@ -159,12 +157,14 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
   .nav-tabs{grid-column:1/4;grid-row:2;justify-self:center;gap:3px;padding:3px}
   .nav-tab{padding:7px 14px;font-size:14px;min-width:auto}
   .nav-right .nav-networth{text-align:right}
-  .nav-right #sync-btn{position:absolute;top:-2px;right:0;z-index:101}
+  .nav-right #sync-btn{position:fixed;bottom:16px;right:16px;z-index:200;padding:10px 20px;border-radius:12px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.18)}
   .nav-right .nav-user-badge{font-size:12px;padding:2px 8px;background:var(--bg-inner)}
   .nav-right .nav-logout{font-size:12px;padding:4px 10px}
   .nav-networth .label{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
   .nav-networth .value{font-size:17px;font-weight:800}
-  .content{padding:12px 10px 30px}
+  .desktop-only-option{display:none}
+  #theme-picker{font-size:10px;padding:2px 6px}
+  .content{padding:12px 10px 70px}
   body[data-tab="accounts"] .summary-row,body[data-tab="accounts"] .budget-bar,body[data-tab="tools"] .summary-row,body[data-tab="tools"] .budget-bar{display:none}
   .summary-row{gap:10px;margin-bottom:10px}
   .summary-card{padding:12px 14px;min-width:140px;margin-bottom:0}
@@ -371,7 +371,14 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
 <div id="app-shell" class="hidden">
   <nav class="navbar">
     <div class="nav-brand"><span class="ic ic-logo" style="cursor:pointer" onclick="resetColors()" title="Reset colors to default"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L14.5 8 8 15 1.5 8Z"/></svg></span><span>Wealth<span class="lens-text" style="color:var(--accent)">Lens</span></span>
-      <input type="color" id="bg-picker" value="#f5f1eb" title="Change background color" style="width:22px;height:22px;border:2px solid var(--border);padding:0;cursor:pointer;border-radius:6px;background:transparent;margin-left:6px;vertical-align:middle" onchange="applyBgColor(this.value)">
+      <select id="theme-picker" onchange="applyTheme(this.value)" style="margin-left:8px;padding:3px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-inner);color:var(--text-dim);font-size:11px;font-weight:600;font-family:var(--font);cursor:pointer;outline:none;vertical-align:middle">
+        <option value="">Warm Minimal</option>
+        <option value="theme-warm-dark">Warm Dark</option>
+        <option value="theme-exec-light" class="desktop-only-option">Executive Light</option>
+        <option value="theme-exec-dark" class="desktop-only-option">Executive Dark</option>
+        <option value="theme-fintech-light" class="desktop-only-option">Fintech Light</option>
+        <option value="theme-fintech-dark" class="desktop-only-option">Fintech Dark</option>
+      </select>
     </div>
     <div class="nav-tabs">
       <button class="nav-tab active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg></span> Dashboard</button>
@@ -1327,38 +1334,26 @@ function hexLuminance(hex){
   return 0.2126*toL(r)+0.7152*toL(g)+0.0722*toL(b);
 }
 
-// Apply background color — updates full page bg, diamond icon, "Lens" text, and active tab
+// ===== THEME SYSTEM — apply/reset/load theme selection =====
+const THEME_CLASSES=['theme-warm-dark','theme-exec-light','theme-exec-dark','theme-fintech-light','theme-fintech-dark'];
+function applyTheme(themeId){
+  // Remove all theme classes, then apply the selected one
+  THEME_CLASSES.forEach(c=>document.body.classList.remove(c));
+  if(themeId)document.body.classList.add(themeId);
+  // Update dropdown to match
+  const picker=document.getElementById('theme-picker');
+  if(picker)picker.value=themeId||'';
+  // Persist
+  if(currentUser)saveData('theme',themeId||'');
+}
 function resetColors(){
-  // Remove all custom color overrides — revert to theme defaults
-  document.documentElement.style.removeProperty('--page-bg');
-  document.documentElement.style.removeProperty('--tab-active-bg');
-  const logo=document.querySelector('.ic-logo');
-  if(logo)logo.style.color='';
-  const lens=document.querySelector('.lens-text');
-  if(lens)lens.style.color='';
-  // Reset picker to theme default
-  const cs=getComputedStyle(document.body);
-  const p=document.getElementById('bg-picker');
-  if(p){const bg=cs.getPropertyValue('--bg').trim();p.value=bg.startsWith('#')?bg:'#f5f1eb';}
-  if(currentUser)saveData('customBg',null);
+  // Diamond click — reset to Warm Minimal Light (default)
+  applyTheme('');
 }
-function applyBgColor(hex){
-  // ONLY changes page background — containers and text are untouched
-  document.documentElement.style.setProperty('--page-bg',hex);
-  const logo=document.querySelector('.ic-logo');
-  if(logo)logo.style.color=hex;
-  const lens=document.querySelector('.lens-text');
-  if(lens)lens.style.color=hex;
-  document.documentElement.style.setProperty('--tab-active-bg',hex);
-  if(currentUser)saveData('customBg',hex);
-  const p=document.getElementById('bg-picker');
-  if(p)p.value=hex;
-}
-
-// Load saved bg color on login
 function loadThemePrefs(){
-  const bg=loadData('customBg');
-  if(bg)applyBgColor(bg);
+  const saved=loadData('theme');
+  if(saved)applyTheme(saved);
+  else applyTheme('');
 }
 
 // ===== TAB NAVIGATION =====
@@ -1417,7 +1412,7 @@ function exportSyncData(){
     accounts,budget:budgetState,
     retProfiles,debtProfiles,
     fooProgress:loadData('foo'),
-    customBg:loadData('customBg')
+    theme:loadData('theme')
   };
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
@@ -1435,7 +1430,7 @@ function emailSyncData(){
     accounts,budget:budgetState,
     retProfiles,debtProfiles,
     fooProgress:loadData('foo'),
-    customBg:loadData('customBg')
+    theme:loadData('theme')
   };
   const json=JSON.stringify(data);
   // mailto with body containing the data (truncated for URL limits)
@@ -1461,7 +1456,7 @@ function importSyncData(file){
       if(data.retProfiles){retProfiles=data.retProfiles;saveData('retProfiles',retProfiles);}
       if(data.debtProfiles){debtProfiles=data.debtProfiles;saveData('debtProfiles',debtProfiles);}
       if(data.fooProgress){fooProgress=data.fooProgress;saveData('foo',fooProgress);}
-      if(data.customBg){saveData('customBg',data.customBg);applyBgColor(data.customBg);}
+      if(data.theme){saveData('theme',data.theme);applyTheme(data.theme);}
       status.innerHTML='<span style="color:var(--pos)">Data imported successfully! ('+data.accounts.length+' accounts)</span>';
       renderAll();
     }catch(err){status.innerHTML='<span style="color:var(--neg)">Error reading file: '+err.message+'</span>';}
@@ -1599,7 +1594,7 @@ async function importFromHash(){
       if(data.retProfiles){retProfiles=data.retProfiles;saveData('retProfiles',retProfiles);}
       if(data.debtProfiles){debtProfiles=data.debtProfiles;saveData('debtProfiles',debtProfiles);}
       if(data.fooProgress){fooProgress=data.fooProgress;saveData('foo',fooProgress);}
-      if(data.customBg){saveData('customBg',data.customBg);applyBgColor(data.customBg);}
+      if(data.theme){saveData('theme',data.theme);applyTheme(data.theme);}
       setSyncBase();renderAll();
       alert('Full sync applied — '+data.accounts.length+' accounts imported.');
     }
