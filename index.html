@@ -420,7 +420,7 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 
       <button class="nav-tab" data-tab="tools" onclick="switchTab('tools')"><span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2a4 4 0 00-3.5 5.8L2 12.3 3.7 14l4.5-4.5A4 4 0 1010 2z"/></svg></span> Tools</button>
     </div>
     <div class="nav-right">
-      <button id="sync-btn" style="visibility:hidden;padding:6px 12px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer" onclick="openSyncModal()">Update</button>
+      <button id="sync-btn" style="padding:6px 12px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer" onclick="openSyncModal()">Update</button>
       <div class="nav-networth"><div class="label">Net Worth</div><div class="value" id="nav-nw">$0</div></div>
       <span class="nav-user-badge" id="nav-username"></span>
       <button class="nav-logout" onclick="logout()">Sign Out</button>
@@ -935,7 +935,7 @@ let dragSrcIdx=null;
 let dragEnterCount=0;
 // Track if data has been modified (for sync feature)
 let dataModified=false;
-function markModified(){dataModified=true;const btn=document.getElementById('sync-btn');if(btn)btn.style.visibility='visible';}
+function markModified(){dataModified=true;}
 
 function renderAccountCards(){
   const cc=document.getElementById("acct-cards");
@@ -1461,7 +1461,7 @@ function exportSyncData(){
   a.href=url;a.download=`WealthLens_${currentUser}_${new Date().toISOString().split('T')[0]}.json`;
   a.click();URL.revokeObjectURL(url);
   document.getElementById('sync-status').innerHTML='<span style="color:var(--pos)">Data exported successfully.</span>';
-  dataModified=false;const btn=document.getElementById('sync-btn');if(btn)btn.style.visibility='hidden';
+  dataModified=false;
 }
 
 function emailSyncData(){
