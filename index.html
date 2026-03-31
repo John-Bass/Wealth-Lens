@@ -159,7 +159,6 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
   .nav-right{grid-column:2/4;grid-row:1;display:flex;align-items:center;gap:6px;justify-content:flex-end;position:relative}
   .nav-tabs{grid-column:1/4;grid-row:2;justify-self:center;gap:3px;padding:3px}
   .nav-tab{padding:7px 12px;font-size:13px;min-width:auto}
-  .nav-right .nav-networth{text-align:right}
   .nav-right #sync-btn{display:none}
   #settings-fab{display:flex!important;position:fixed;bottom:18px;right:18px;z-index:200;padding:12px 24px;border-radius:14px;font-size:14px;font-weight:700;font-family:var(--font);border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.18);align-items:center;gap:6px}
   .nav-right .nav-user-badge{display:none}
@@ -407,14 +406,15 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 
 <!-- MAIN APP -->
 <div id="app-shell" class="hidden">
   <nav class="navbar">
-    <div class="nav-brand"><span class="ic ic-logo" style="cursor:pointer" onclick="resetColors()" title="Reset colors to default"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L14.5 8 8 15 1.5 8Z"/></svg></span><span>Wealth<span class="lens-text" style="color:var(--accent)">Lens</span></span>
-      <select id="theme-picker" onchange="applyTheme(this.value)" style="margin-left:8px;padding:3px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-inner);color:var(--text-dim);font-size:11px;font-weight:600;font-family:var(--font);cursor:pointer;outline:none;vertical-align:middle">
+    <div class="nav-brand"><span class="ic ic-logo" style="cursor:pointer" onclick="resetColors()" title="Reset theme to default"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L14.5 8 8 15 1.5 8Z"/></svg></span><span>Wealth<span class="lens-text" style="color:var(--accent)">Lens</span></span>
+      <div class="nav-networth" style="margin-left:12px"><div class="label">Net Worth</div><div class="value" id="nav-nw">$0</div></div>
+      <select id="theme-picker" onchange="applyTheme(this.value)" style="display:none">
         <option value="">Kyoto Dawn</option>
         <option value="theme-warm-dark">Kyoto Dusk</option>
-        <option value="theme-exec-light" class="desktop-only-option">Tokyo Dawn</option>
-        <option value="theme-exec-dark" class="desktop-only-option">Tokyo Dusk</option>
-        <option value="theme-fintech-light" class="desktop-only-option">Osaka Dawn</option>
-        <option value="theme-fintech-dark" class="desktop-only-option">Osaka Dusk</option>
+        <option value="theme-exec-light">Tokyo Dawn</option>
+        <option value="theme-exec-dark">Tokyo Dusk</option>
+        <option value="theme-fintech-light">Osaka Dawn</option>
+        <option value="theme-fintech-dark">Osaka Dusk</option>
       </select>
     </div>
     <div class="nav-tabs">
@@ -423,9 +423,8 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 
       <button class="nav-tab" data-tab="tools" onclick="switchTab('tools')"><span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2a4 4 0 00-3.5 5.8L2 12.3 3.7 14l4.5-4.5A4 4 0 1010 2z"/></svg></span> Tools</button>
     </div>
     <div class="nav-right">
-      <button id="sync-btn" style="padding:6px 12px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer" onclick="openSyncModal()">Update</button>
-      <div class="nav-networth"><div class="label">Net Worth</div><div class="value" id="nav-nw">$0</div></div>
       <span class="nav-user-badge" id="nav-username"></span>
+      <button id="sync-btn" style="padding:6px 12px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer" onclick="openSettings()">Settings</button>
       <button class="nav-logout" onclick="logout()">Sign Out</button>
     </div>
     <button id="settings-fab" class="hidden" onclick="openSettings()"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 10a2 2 0 100-4 2 2 0 000 4zm6.3-2.5l-1.1-.2a5.2 5.2 0 00-.4-1l.7-.9a.5.5 0 000-.7l-.7-.7a.5.5 0 00-.7 0l-.9.7a5.2 5.2 0 00-1-.4l-.2-1.1a.5.5 0 00-.5-.4h-1a.5.5 0 00-.5.4l-.2 1.1a5.2 5.2 0 00-1 .4l-.9-.7a.5.5 0 00-.7 0l-.7.7a.5.5 0 000 .7l.7.9a5.2 5.2 0 00-.4 1l-1.1.2a.5.5 0 00-.4.5v1a.5.5 0 00.4.5l1.1.2a5.2 5.2 0 00.4 1l-.7.9a.5.5 0 000 .7l.7.7a.5.5 0 00.7 0l.9-.7a5.2 5.2 0 001 .4l.2 1.1a.5.5 0 00.5.4h1a.5.5 0 00.5-.4l.2-1.1a5.2 5.2 0 001-.4l.9.7a.5.5 0 00.7 0l.7-.7a.5.5 0 000-.7l-.7-.9a5.2 5.2 0 00.4-1l1.1-.2a.5.5 0 00.4-.5v-1a.5.5 0 00-.4-.5z"/></svg> Settings</button>
