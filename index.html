@@ -163,7 +163,7 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
   .nav-networth .label{display:none}
   .nav-networth .value{font-size:15px;font-weight:800}
   .desktop-only-option{display:none}
-  #theme-picker{font-size:10px;padding:2px 4px;max-width:80px}
+  #theme-picker{font-size:10px;padding:2px 4px;max-width:80px;margin-left:auto}
   .content{padding:12px 10px 70px}
   body[data-tab="accounts"] .summary-row,body[data-tab="accounts"] .budget-bar,body[data-tab="tools"] .summary-row,body[data-tab="tools"] .budget-bar{display:none}
   .summary-row{gap:10px;margin-bottom:10px}
@@ -207,7 +207,7 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
 /* History entries — scrollable, editable, with comment column */
 .history-panel{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
 .history-scroll{max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.history-row{display:grid;grid-template-columns:100px 100px 1fr;gap:6px;align-items:center;padding:5px 10px;border-radius:6px;font-size:12px;margin-bottom:2px}
+.history-row{display:grid;grid-template-columns:100px 100px 1fr 24px;gap:6px;align-items:center;padding:5px 10px;border-radius:6px;font-size:12px;margin-bottom:2px}
 .history-row:nth-child(odd){background:var(--bg-inner)}
 .history-row .h-date{color:var(--text-dim);font-weight:600}
 .history-row .h-val{font-weight:700;text-align:right}
@@ -215,7 +215,8 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
 .history-row input{background:transparent;border:none;border-bottom:1px solid transparent;color:inherit;font:inherit;outline:none;padding:2px 4px;width:100%;transition:border-color .15s}
 .history-row input:hover{border-bottom-color:var(--border)}
 .history-row input:focus{border-bottom-color:var(--accent)}
-.history-header{display:grid;grid-template-columns:100px 100px 1fr;gap:6px;padding:4px 10px;font-size:10px;color:var(--text-faint);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.history-header{display:grid;grid-template-columns:100px 100px 1fr 24px;gap:6px;padding:4px 10px;font-size:10px;color:var(--text-faint);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.hist-del{background:none;border:none;color:var(--text-faint);font-size:14px;cursor:pointer;padding:0;line-height:1;transition:color .15s}.hist-del:hover{color:var(--red)}
 .btn-hist-active{background:var(--accent-dim)!important;color:var(--accent)!important;border-color:var(--accent)!important}
 .history-add{display:flex;gap:8px;align-items:center;margin-top:8px}
 .history-add input{padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-inner);color:var(--text);font-size:12px;font-family:var(--font);outline:none}
@@ -950,7 +951,7 @@ function renderAccountCards(){
     if(historyOpenId===a.id){
       const entries=(a.history||[]).slice().reverse();
       histHtml=`<div class="history-panel">
-        <div class="history-header"><span>Date</span><span>Balance</span><span>Comment</span></div>
+        <div class="history-header"><span>Date</span><span>Balance</span><span>Comment</span><span></span></div>
         <div class="history-scroll">
         ${entries.map((h,hi)=>{
           const ri=(a.history||[]).length-1-hi;
@@ -958,6 +959,7 @@ function renderAccountCards(){
             <input type="date" value="${h.date}" style="color:var(--text-dim);font-weight:600" onchange="editHistEntry(${idx},${ri},'date',this.value)">
             <input type="number" value="${h.bal}" style="color:${bc};font-weight:700;text-align:right" onchange="editHistEntry(${idx},${ri},'bal',parseFloat(this.value)||0)">
             <input type="text" value="${h.comment||''}" placeholder="Add note..." class="h-comment" onchange="editHistEntry(${idx},${ri},'comment',this.value)">
+            <button class="hist-del" onclick="deleteHistEntry(${idx},${ri})" title="Remove entry">&#x2715;</button>
           </div>`;
         }).join("")}
         </div>
@@ -1009,6 +1011,15 @@ function editHistEntry(acctIdx,histIdx,field,value){
   }
   if(field==='date')accounts[acctIdx].history.sort((a,b)=>a.date.localeCompare(b.date));
   saveAccounts(accounts);markModified();renderAll();
+}
+function deleteHistEntry(acctIdx,histIdx){
+  if(!accounts[acctIdx]||!accounts[acctIdx].history[histIdx])return;
+  if(!confirm('Remove this history entry?'))return;
+  accounts[acctIdx].history.splice(histIdx,1);
+  // Update balance to latest remaining entry
+  const h=accounts[acctIdx].history;
+  if(h.length>0){h.sort((a,b)=>a.date.localeCompare(b.date));accounts[acctIdx].balance=h[h.length-1].bal;}
+  saveAccounts(accounts);markModified();renderAccountCards();renderAll();
 }
 
 function addHistoryEntry(id){
