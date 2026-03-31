@@ -444,10 +444,14 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
   <div class="modal-card" style="max-width:500px">
     <h2>Sync Data Across Devices</h2>
     <p style="color:var(--text-dim);font-size:13px;margin-bottom:20px">Export your data to transfer to another device, or import data from another device.</p>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
       <button class="btn-save" onclick="exportSyncData()" style="flex:1;min-width:120px">Download JSON</button>
       <button class="btn-save" onclick="emailSyncData()" style="flex:1;min-width:120px;background:var(--blue)">Email JSON</button>
       <button class="btn-save" onclick="generateSyncQR()" style="flex:1;min-width:120px;background:#7c3aed">Sync via QR</button>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:8px;background:var(--bg-inner);border-radius:10px;padding:10px 12px;margin-bottom:16px">
+      <span style="color:var(--accent);font-size:16px;flex-shrink:0;margin-top:1px"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.75 10.5h-1.5v-5h1.5v5zm0-6.5h-1.5V3.5h1.5V5z"/></svg></span>
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.5"><strong style="color:var(--text)">How QR Sync works:</strong> Click <em>Sync via QR</em> to generate a code containing only your changes since the last sync. Scan it on your other device (both must be logged in). Data stays entirely on your devices — nothing is sent to any server. For a first-time device setup, use Download JSON instead.</div>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:16px">
       <label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;display:block;margin-bottom:8px">Import Data File</label>
