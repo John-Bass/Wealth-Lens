@@ -222,10 +222,6 @@ select.form-input{appearance:none;cursor:pointer;background-image:url("data:imag
 .history-add{display:flex;gap:8px;align-items:center;margin-top:8px}
 .history-add input{padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-inner);color:var(--text);font-size:12px;font-family:var(--font);outline:none}
 .history-add button{padding:4px 12px;border-radius:6px;border:none;background:var(--accent);color:var(--bg);font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer}
-.quick-edit-row{display:flex;gap:8px;align-items:center;margin-top:12px}
-.quick-edit-row input{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-inner);color:var(--text);font-size:14px;width:140px;font-family:var(--font);outline:none}
-.btn-qsave{padding:6px 14px;border-radius:8px;border:none;background:var(--accent);color:var(--bg);cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font)}
-.btn-qcancel{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;font-size:12px;font-family:var(--font)}
 .empty-state{text-align:center;padding:60px 20px;color:var(--text-dim)}.empty-state .icon{font-size:40px;margin-bottom:12px}
 /* ===== MODAL — popup overlay for adding/editing accounts ===== */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
@@ -426,7 +422,7 @@ input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 
       <span class="nav-user-badge" id="nav-username"></span>
       <button class="nav-logout" onclick="logout()">Sign Out</button>
     </div>
-    <button id="settings-fab" style="display:none" onclick="openSettings()"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 10a2 2 0 100-4 2 2 0 000 4zm6.3-2.5l-1.1-.2a5.2 5.2 0 00-.4-1l.7-.9a.5.5 0 000-.7l-.7-.7a.5.5 0 00-.7 0l-.9.7a5.2 5.2 0 00-1-.4l-.2-1.1a.5.5 0 00-.5-.4h-1a.5.5 0 00-.5.4l-.2 1.1a5.2 5.2 0 00-1 .4l-.9-.7a.5.5 0 00-.7 0l-.7.7a.5.5 0 000 .7l.7.9a5.2 5.2 0 00-.4 1l-1.1.2a.5.5 0 00-.4.5v1a.5.5 0 00.4.5l1.1.2a5.2 5.2 0 00.4 1l-.7.9a.5.5 0 000 .7l.7.7a.5.5 0 00.7 0l.9-.7a5.2 5.2 0 001 .4l.2 1.1a.5.5 0 00.5.4h1a.5.5 0 00.5-.4l.2-1.1a5.2 5.2 0 001-.4l.9.7a.5.5 0 00.7 0l.7-.7a.5.5 0 000-.7l-.7-.9a5.2 5.2 0 00.4-1l1.1-.2a.5.5 0 00.4-.5v-1a.5.5 0 00-.4-.5z"/></svg> Settings</button>
+    <button id="settings-fab" class="hidden" onclick="openSettings()"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 10a2 2 0 100-4 2 2 0 000 4zm6.3-2.5l-1.1-.2a5.2 5.2 0 00-.4-1l.7-.9a.5.5 0 000-.7l-.7-.7a.5.5 0 00-.7 0l-.9.7a5.2 5.2 0 00-1-.4l-.2-1.1a.5.5 0 00-.5-.4h-1a.5.5 0 00-.5.4l-.2 1.1a5.2 5.2 0 00-1 .4l-.9-.7a.5.5 0 00-.7 0l-.7.7a.5.5 0 000 .7l.7.9a5.2 5.2 0 00-.4 1l-1.1.2a.5.5 0 00-.4.5v1a.5.5 0 00.4.5l1.1.2a5.2 5.2 0 00.4 1l-.7.9a.5.5 0 000 .7l.7.7a.5.5 0 00.7 0l.9-.7a5.2 5.2 0 001 .4l.2 1.1a.5.5 0 00.5.4h1a.5.5 0 00.5-.4l.2-1.1a5.2 5.2 0 001-.4l.9.7a.5.5 0 00.7 0l.7-.7a.5.5 0 000-.7l-.7-.9a5.2 5.2 0 00.4-1l1.1-.2a.5.5 0 00.4-.5v-1a.5.5 0 00-.4-.5z"/></svg> Settings</button>
   </nav>
   <div class="content">
     <!-- Budget Summary Bar - shows income vs expenses at top -->
@@ -696,7 +692,7 @@ function findBal(h,td){if(!h||h.length===0)return 0;for(let i=h.length-1;i>=0;i-
 // accounts: array of all user accounts with balances, history, APY, contributions
 // currentTab: which tab is showing (dashboard/accounts/tools)
 // chartRange/chartView: what the main chart is displaying
-let accounts=[],currentTab="dashboard",chartRange="1y",chartView="networth",editingId=null,quickEditId=null;
+let accounts=[],currentTab="dashboard",chartRange="1y",chartView="networth",editingId=null;
 let mainChartInstance=null,retChartInstance=null,debtChartInstance=null,rothChartInstance=null;
 // Calculator states
 // ===== CALCULATOR STATES =====
@@ -1462,10 +1458,6 @@ function hideModal(){document.getElementById("modal-overlay").classList.add("hid
 function closeModal(e){if(e.target===document.getElementById("modal-overlay"))hideModal();}
 function saveAccount(){const n=document.getElementById("modal-name").value.trim();const c=document.getElementById("modal-cat").value;const b=parseFloat(document.getElementById("modal-bal").value)||0;const cd=ACCOUNT_CATEGORIES.find(x=>x.value===c);const t=cd?cd.type:"asset";if(editingId){const i=accounts.findIndex(a=>a.id===editingId);if(i!==-1){const td=new Date().toISOString().split("T")[0];accounts[i].name=n||accounts[i].name;accounts[i].category=c;accounts[i].type=t;accounts[i].balance=b;accounts[i].history.push({date:td,bal:b});}}else{accounts.push({id:uid(),name:n||cd?.label||"Account",category:c,type:t,balance:b,color:ACCT_COLORS[accounts.length%ACCT_COLORS.length],apy:0,monthlyContrib:0,history:genHistory(b,365,t==="asset"?.05:.01)});}saveAccounts(accounts);markModified();hideModal();renderAll();}
 function deleteAccount(id){if(!confirm("Delete this account? This cannot be undone."))return;accounts=accounts.filter(a=>a.id!==id);saveAccounts(accounts);markModified();renderAll();}
-function startQuickEdit(id){quickEditId=id;renderAccountCards();}
-function applyQuickEdit(id){const inp=document.getElementById("quick-input-"+id);if(!inp)return;const nb=parseFloat(inp.value);if(isNaN(nb))return;const td=new Date().toISOString().split("T")[0];const i=accounts.findIndex(a=>a.id===id);if(i!==-1){accounts[i].balance=nb;accounts[i].history.push({date:td,bal:nb});}quickEditId=null;saveAccounts(accounts);renderAll();}
-function cancelQuickEdit(){quickEditId=null;renderAccountCards();}
-function quickEditFromDashboard(id){quickEditId=id;switchTab("accounts");}
 function inlineEditDashBal(id,el,color){
   const a=accounts.find(x=>x.id===id);if(!a)return;
   const oldVal=a.balance;
