@@ -584,7 +584,7 @@ async function attemptLogin(){const user=document.getElementById("login-user").v
   if(users[user].answer&&users[user].answer.length<64){users[user].answer=await hashPw(users[user].answer.toLowerCase(),user);setUsers(users);}
   currentUser=user;sessionKey=hashed;document.getElementById("login-screen").classList.add("hidden");document.getElementById("app-shell").classList.remove("hidden");document.getElementById("login-error").textContent="";document.getElementById("nav-username").textContent=user;
   const rm=document.getElementById("remember-me");
-  if(rm&&rm.checked){localStorage.setItem(P+"remember",JSON.stringify({user,pass}));}else{localStorage.removeItem(P+"remember");}
+  if(rm&&rm.checked){const rmData=JSON.stringify({user,pass});localStorage.setItem(P+"remember",'X1:'+btoa(unescape(encodeURIComponent(xorCipher(rmData,user.toLowerCase())))));}else{localStorage.removeItem(P+"remember");}
   if(user==="test")localStorage.setItem(P+"demoUsed","1");
   initApp();}
 document.addEventListener("keydown",function(e){if(e.key!=="Enter"||document.getElementById("login-screen").classList.contains("hidden"))return;if(!document.getElementById("login-form").classList.contains("hidden"))attemptLogin();else if(!document.getElementById("register-form").classList.contains("hidden"))registerUser();else if(!document.getElementById("reset-form").classList.contains("hidden"))handleReset();});
@@ -602,7 +602,11 @@ function logout(){currentUser=null;sessionKey=null;document.getElementById("app-
   const banner=document.getElementById("demo-banner");
   if(banner&&localStorage.getItem(P+"demoUsed"))banner.style.display="none";
   // Re-fill if Remember Me was active (but not test creds after demo)
-  try{const rm=JSON.parse(localStorage.getItem(P+"remember"));
+  try{const raw=localStorage.getItem(P+"remember");let rm=null;
+  if(raw&&raw.startsWith('X1:')){const dec=atob(raw.slice(3));
+    // Try each user to find the right decryption key
+    const users=getUsers();for(const u of Object.keys(users)){try{const j=xorCipher(decodeURIComponent(escape(dec)),u.toLowerCase());rm=JSON.parse(j);if(rm&&rm.user)break;}catch(e){rm=null;}}}
+  else if(raw){try{rm=JSON.parse(raw);}catch(e){}}
   if(rm&&rm.user&&rm.pass){document.getElementById("login-user").value=rm.user;document.getElementById("login-pass").value=rm.pass;const cb=document.getElementById("remember-me");if(cb)cb.checked=true;}
   else{const cb=document.getElementById("remember-me");if(cb)cb.checked=false;}}catch(e){}}
 
@@ -1530,12 +1534,11 @@ function importSyncData(file){
 function setSyncBase(){
   if(!currentUser)return;
   const base={accounts:JSON.parse(JSON.stringify(accounts)),budget:JSON.parse(JSON.stringify(budgetState))};
-  localStorage.setItem(P+'syncBase_'+currentUser,JSON.stringify(base));
+  saveData('syncBase',base);
 }
 function computeDiffs(){
   if(!currentUser)return[];
-  let base;
-  try{base=JSON.parse(localStorage.getItem(P+'syncBase_'+currentUser));}catch(e){return[];}
+  const base=loadData('syncBase');
   if(!base)return[];
   const diffs=[];
   const baseById={};(base.accounts||[]).forEach(a=>baseById[a.id]=a);
@@ -1715,7 +1718,10 @@ initAuth();
   if(!demoUsed){if(lu&&!lu.value)lu.value="test";if(lp&&!lp.value)lp.value="account";}
   // Hide banner if demo already used
   if(demoUsed){const b=document.getElementById("demo-banner");if(b)b.style.display="none";}
-  try{const rm=JSON.parse(localStorage.getItem(P+"remember"));
+  try{const raw=localStorage.getItem(P+"remember");let rm=null;
+  if(raw&&raw.startsWith('X1:')){const dec=atob(raw.slice(3));
+    const users=getUsers();for(const u of Object.keys(users)){try{const j=xorCipher(decodeURIComponent(escape(dec)),u.toLowerCase());rm=JSON.parse(j);if(rm&&rm.user)break;}catch(e){rm=null;}}}
+  else if(raw){try{rm=JSON.parse(raw);}catch(e){}}
   if(rm&&rm.user&&rm.pass){lu.value=rm.user;lp.value=rm.pass;
     const cb2=document.getElementById("remember-me");if(cb2)cb2.checked=true;
   }}catch(e){}
