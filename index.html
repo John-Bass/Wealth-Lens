@@ -582,7 +582,7 @@ async function attemptLogin(){const user=document.getElementById("login-user").v
   if(stored.length<64){users[user].password=hashed;setUsers(users);}
   // Auto-migrate plain-text security answer to hash
   if(users[user].answer&&users[user].answer.length<64){users[user].answer=await hashPw(users[user].answer.toLowerCase(),user);setUsers(users);}
-  currentUser=user;document.getElementById("login-screen").classList.add("hidden");document.getElementById("app-shell").classList.remove("hidden");document.getElementById("login-error").textContent="";document.getElementById("nav-username").textContent=user;
+  currentUser=user;sessionKey=hashed;document.getElementById("login-screen").classList.add("hidden");document.getElementById("app-shell").classList.remove("hidden");document.getElementById("login-error").textContent="";document.getElementById("nav-username").textContent=user;
   const rm=document.getElementById("remember-me");
   if(rm&&rm.checked){localStorage.setItem(P+"remember",JSON.stringify({user,pass}));}else{localStorage.removeItem(P+"remember");}
   if(user==="test")localStorage.setItem(P+"demoUsed","1");
@@ -597,7 +597,7 @@ async function handleReset(){const btn=document.getElementById("reset-action-btn
   const stored=users[u]?users[u].answer:'';const hashedAns=await hashPw(a,u);
   const ansMatch=stored===hashedAns||(stored.length<64&&stored===a);
   if(ansMatch){document.getElementById("reset-step2").classList.remove("hidden");btn.textContent="Reset Password";btn.dataset.step="2";err.style.color="var(--accent)";err.textContent="✓ Verified. Enter new password.";}else{err.style.color="var(--red)";err.textContent="Incorrect.";}}else if(step==="2"){const np=document.getElementById("reset-newpass").value,cf=document.getElementById("reset-confirm").value,u=btn.dataset.resetUser;if(!np||np.length<6){err.style.color="var(--red)";err.textContent="Min 6 characters.";return;}if(np!==cf){err.style.color="var(--red)";err.textContent="Passwords don't match.";return;}const users=getUsers();if(users[u]){users[u].password=await hashPw(np,u);setUsers(users);}document.getElementById("reset-user").disabled=false;err.style.color="var(--accent)";err.textContent="✓ Password updated!";setTimeout(showLoginForm,1500);}}
-function logout(){currentUser=null;document.getElementById("app-shell").classList.add("hidden");document.getElementById("login-screen").classList.remove("hidden");document.getElementById("login-pass").value="";document.getElementById("login-user").value="";document.getElementById("login-error").textContent="";
+function logout(){currentUser=null;sessionKey=null;document.getElementById("app-shell").classList.add("hidden");document.getElementById("login-screen").classList.remove("hidden");document.getElementById("login-pass").value="";document.getElementById("login-user").value="";document.getElementById("login-error").textContent="";
   // Hide demo banner after first use
   const banner=document.getElementById("demo-banner");
   if(banner&&localStorage.getItem(P+"demoUsed"))banner.style.display="none";
@@ -607,12 +607,19 @@ function logout(){currentUser=null;document.getElementById("app-shell").classLis
   else{const cb=document.getElementById("remember-me");if(cb)cb.checked=false;}}catch(e){}}
 
 // ================================================================
-// PER-USER PERSISTENCE
+// PER-USER PERSISTENCE (XOR-encrypted with password-derived key)
 // ================================================================
-// ===== PER-USER DATA STORAGE =====
-// All data is namespaced by username so each user has their own accounts, budget, etc.
-function loadData(key){if(!currentUser)return null;const r=localStorage.getItem(P+key+"_"+currentUser);if(!r)return null;try{return JSON.parse(r);}catch(e){return null;}}
-function saveData(key,v){if(!currentUser)return;localStorage.setItem(P+key+"_"+currentUser,JSON.stringify(v));}
+let sessionKey=null; // Set on login from password hash, cleared on logout
+// XOR encrypt/decrypt — symmetric, same function for both directions
+function xorCipher(str,key){if(!key)return str;let r='';for(let i=0;i<str.length;i++)r+=String.fromCharCode(str.charCodeAt(i)^key.charCodeAt(i%key.length));return r;}
+function encryptData(v){const json=JSON.stringify(v);if(!sessionKey)return json;return 'X1:'+btoa(unescape(encodeURIComponent(xorCipher(json,sessionKey))));}
+function decryptData(raw){if(!raw)return null;
+  // X1: prefix means XOR-encrypted
+  if(raw.startsWith('X1:')&&sessionKey){try{const dec=xorCipher(decodeURIComponent(escape(atob(raw.slice(3)))),sessionKey);return JSON.parse(dec);}catch(e){return null;}}
+  // Fallback: try plain JSON (legacy unencrypted data)
+  try{return JSON.parse(raw);}catch(e){return null;}}
+function loadData(key){if(!currentUser)return null;const r=localStorage.getItem(P+key+"_"+currentUser);if(!r)return null;return decryptData(r);}
+function saveData(key,v){if(!currentUser)return;localStorage.setItem(P+key+"_"+currentUser,encryptData(v));}
 function loadAccounts(){return loadData("data");}
 function saveAccounts(a){saveData("data",a);}
 
@@ -1686,10 +1693,11 @@ function initApp(){
   if(debtProfiles.length>0){activeDebtProfile=0;const p=debtProfiles[0];debtState={...debtState,...p};}
   // Load saved budget (income + expenses) or keep defaults
   const savedBudget=loadData("budget");
-  if(savedBudget){budgetState=savedBudget;}else{if(currentUser!=="test")budgetState={income:0,expenses:[]};saveData("budget",budgetState);}
+  if(savedBudget){budgetState=savedBudget;saveData("budget",budgetState);}else{if(currentUser!=="test")budgetState={income:0,expenses:[]};saveData("budget",budgetState);}
+  saveData("retProfiles",retProfiles);saveData("debtProfiles",debtProfiles);
   // Load FOO progress (9-step checklist)
   const savedFoo=loadData("foo");
-  if(savedFoo){fooProgress=savedFoo;}else{fooProgress=FOO_STEPS.map(()=>false);}
+  if(savedFoo){fooProgress=savedFoo;saveData("foo",fooProgress);}else{fooProgress=FOO_STEPS.map(()=>false);}
   populateCategoryDropdown();
   buildRangeToggles();
   loadThemePrefs(); // Load saved theme + custom colors before first render
